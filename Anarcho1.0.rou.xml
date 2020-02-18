@@ -1,0 +1,16 @@
+
+
+<routes>
+
+      <vType accel="30.0" decel="5.0" id="Emergency" length="5.0" maxSpeed="100.0" sigma="0.0" color='1,0,0' minGap="10.0" />
+      <vType accel="2.0" decel="2.0" id="Ego" length="2.0" maxSpeed="10.0" sigma="0.0" color='0,0,1' />
+      <vType accel="10.0" decel="10.0" id="Demos" length="5.0" maxSpeed="100.0" sigma="0.0"  />
+      <route id="Main_route" edges="r1 r2 r3 r4 "/>
+      <route id="Early_route" edges="r2 r3 r4 r1 "/>
+      <vehicle depart="0" id="RB" route="Early_route" type="Ego" />
+      <vehicle depart="0" id="LH" route="Main_route" type="Emergency" />
+      <vehicle depart="0" id="D1" route="Main_route" type="Demos" />
+      <vehicle depart="0" id="D2" route="Main_route" type="Demos" />
+
+
+</routes>
