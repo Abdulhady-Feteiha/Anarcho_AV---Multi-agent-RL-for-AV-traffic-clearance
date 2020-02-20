@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Wed Feb 19 17:23:38 2020 by Eclipse SUMO netedit Version 1.4.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <output>
+        <output-file value="/Users/Abdulhady/Desktop/GP/RL/Anarcho1.2/Anarcho1.2.net.xml"/>
+    </output>
+
+    <processing>
+        <offset.disable-normalization value="true"/>
+    </processing>
+
+    <junctions>
+        <no-turnarounds value="true"/>
+    </junctions>
+
+    <report>
+        <aggregate-warnings value="5"/>
+    </report>
+
+</configuration>
+-->
+
+<net version="1.3" junctionCornerDetail="5" limitTurnSpeed="5.50" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
+
+    <location netOffset="0.00,0.00" convBoundary="0.00,0.00,500.00,0.00" origBoundary="10000000000.00,10000000000.00,-10000000000.00,-10000000000.00" projParameter="!"/>
+
+    <edge id=":e2_0" function="internal">
+        <lane id=":e2_0_0" index="0" speed="13.89" length="0.10" shape="100.00,-8.00 100.00,-8.00"/>
+        <lane id=":e2_0_1" index="1" speed="13.89" length="0.10" shape="100.00,-4.80 100.00,-4.80"/>
+        <lane id=":e2_0_2" index="2" speed="13.89" length="0.10" shape="100.00,-1.60 100.00,-1.60"/>
+    </edge>
+
+    <edge id="r1" from="e1" to="e2" priority="-1">
+        <lane id="r1_0" index="0" speed="13.89" length="100.00" shape="0.00,-8.00 100.00,-8.00"/>
+        <lane id="r1_1" index="1" speed="13.89" length="100.00" shape="0.00,-4.80 100.00,-4.80"/>
+        <lane id="r1_2" index="2" speed="13.89" length="100.00" shape="0.00,-1.60 100.00,-1.60"/>
+    </edge>
+    <edge id="r2" from="e2" to="e3" priority="-1">
+        <lane id="r2_0" index="0" speed="13.89" length="400.00" shape="100.00,-8.00 500.00,-8.00"/>
+        <lane id="r2_1" index="1" speed="13.89" length="400.00" shape="100.00,-4.80 500.00,-4.80"/>
+        <lane id="r2_2" index="2" speed="13.89" length="400.00" shape="100.00,-1.60 500.00,-1.60"/>
+    </edge>
+
+    <junction id="e1" type="dead_end" x="0.00" y="0.00" incLanes="" intLanes="" shape="0.00,0.00 0.00,-9.60"/>
+    <junction id="e2" type="priority" x="100.00" y="0.00" incLanes="r1_0 r1_1 r1_2" intLanes=":e2_0_0 :e2_0_1 :e2_0_2" shape="100.00,0.00 100.00,-9.60 100.00,0.00">
+        <request index="0" response="000" foes="000" cont="0"/>
+        <request index="1" response="000" foes="000" cont="0"/>
+        <request index="2" response="000" foes="000" cont="0"/>
+    </junction>
+    <junction id="e3" type="dead_end" x="500.00" y="0.00" incLanes="r2_0 r2_1 r2_2" intLanes="" shape="500.00,-9.60 500.00,0.00"/>
+
+    <connection from="r1" to="r2" fromLane="0" toLane="0" via=":e2_0_0" dir="s" state="M"/>
+    <connection from="r1" to="r2" fromLane="1" toLane="1" via=":e2_0_1" dir="s" state="M"/>
+    <connection from="r1" to="r2" fromLane="2" toLane="2" via=":e2_0_2" dir="s" state="M"/>
+
+    <connection from=":e2_0" to="r2" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from=":e2_0" to="r2" fromLane="1" toLane="1" dir="s" state="M"/>
+    <connection from=":e2_0" to="r2" fromLane="2" toLane="2" dir="s" state="M"/>
+
+</net>
