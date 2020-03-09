@@ -110,7 +110,9 @@ class Vehicle:
     def inst_acc(self, acc):
         ''' accelerate instantaneously'''
         self.getSpd() #get current speed
-        traci.vehicle.setSpeed(self.ID, np.min(int(self.spd  + acc), int(self.max_speed)))
+        traci.vehicle.setSpeed(self.ID, max( 0.0 , min(int(self.spd  + acc), int(self.max_speed))))
+        #minimum velocity: 0.0 -> Handled by Code, not SUMO. Sumo ignores command if velocity is negative.
+        #maximum velocity: self.max_speed -> Handled by SUMO, so code here is redundant.
 
 
 
@@ -176,7 +178,7 @@ def CalcDist(emer,agent):
 
 class RLAlgorithm():
     '''
-    Access order for the Q_table is [agent_vel][agent_lane][amb_vel][amb_lane][rel_amb_y][action]
+    Access order for the Q_table is [agent_vel][agent_lane][amb_vel][amb_lane][rel_amb_y][action].. remember to change the value rel_amb_y to be positive [0,58]
     '''
 
     def __init__(self, environment, name="Q-learning"):
@@ -233,13 +235,15 @@ class RLAlgorithm():
 
 class env():
 
-    def __init__(self, list_of_vehicles, name="SingleAgentEvn0.1"):
+    def __init__(self, list_of_vehicles, name="SingleAgentEvn0.1", max_steps=1000, ambulance_goal_distance=500):
 
         self.name = name
         self.list_of_vehicles = list_of_vehicles
+        self.max_steps = max_steps
+        self.amb_goal_dist = ambulance_goal_distance
 
-        self.agents = []
-        self.emer = None
+        self.agents = [] #Stays as is in multiagent
+        self.emer = None #Stays as is in multiagent
 
         self.hidden_state = None
         self.observed_state = None
@@ -384,15 +388,38 @@ class env():
 
         print(f'Feasible actions: ', feasible_actions)
 
+    def are_we_done(self, full_state, step_number):
+        #full_state: currently not used since we have the ambulance object.
+
+        amb_abs_y = self.full_state[-1][-1] #Please refer to shape of full_state list in env.measure_full_state()
+
+
+        #1: steps == max_steps-1
+        if(step_number == self.max_steps-1):
+            return 1
+        #2: goal reached
+        elif(amb_abs_y > self.amb_goal_dist - self.emer.max_speed-1 ):
+            # TODO: Change NET file to have total distance = 511. Then we can have the condition to compare with 500 directly.
+            return 2 #GOAL IS NOW 500-10-1 = 489 cells ahead. To avoid ambulance car eacaping
+
+        for agent_index in range( self.count_ego_vehicles ):
+            agent_abs_y = self.full_state[-1][agent_index] # #Please refer to shape of full_state list in env.measure_full_state
+                                                            # hidden_state shape: [ agent_abs_y ... for vehicle in vehicles , amb_abs_y]
+            if (agent_abs_y > self.amb_goal_dist - self.emer.max_speed - 1):
+                return 3
+
+
+
+        # 0: not done
+        return 0
 
 
 
 def run():
     step = 0
 
-    LH.chL(0)
+    #LH.chL(0) #No need for this now, automatic lane change is removed. Checkout Vehicle.__init__() : traci.vehicle.setLaneChangeMode(self.ID, 256)
 
-    #print("Hello world, I'm an AV, and I love carrots")
     while traci.simulation.getMinExpectedNumber() > 0:
 
         traci.simulationStep()
@@ -409,6 +436,20 @@ def run():
         print(step,' : ','[agent_vel , agent_lane , amb_vel , amb_lane , rel_amb_y]')
         print(step,' :  ',Proudhon.observed_state)
         step += 1
+
+        done = Proudhon.are_we_done(full_state=Proudhon.full_state, step_number=step)
+
+        if(done):
+            if(done == 1):
+                print("We are done here due to PASSING MAX STEPS NUMBER!")
+            elif(done == 2):
+                print("We are done here due to AMBULANCE PASSING THE GOAL!")
+            elif(done == 3): #TODO: #TOFIX: What should be the state here?
+                print("We are done here due to AGENT PASSING THE GOAL!")
+            else:
+                print("We are done here BUT I DON'T KNOW WHY!")
+
+            break
 
         """
         if step ==10:
