@@ -41,7 +41,7 @@ class Vehicle:
         self.type = traci.vehicle.getTypeID(self.ID)
         self.max_speed = traci.vehicle.getMaxSpeed(self.ID)
 
-    def getSpd(self):
+    def getSpd(self): #ROS
         '''
         :return: vehicle speed in m/sec over last step. This is the speed that will be continued with if no intereference
         occurs from setSpeed or slowDown functions.
@@ -58,7 +58,7 @@ class Vehicle:
             pass #EDIT #Is this useful? I think it's a remenant. #Waleed
             #print("Warning,current route status: "+traci.vehicle.getRoadID(self.ID) )
 
-    def getPose(self):
+    def getPose(self): #ROS
         '''
         :return: return the position of the vehicle's front tip in the lane (lane: 0,1 currently).
         Accounts for different routes.
@@ -67,19 +67,19 @@ class Vehicle:
         if(self.route > self.base_route):
             self.lane_pose +=  self.length_of_base_route
 
-    def getAcc(self):
+    def getAcc(self): #ROS
         '''
         :return: Returns the acceleration in m/s^2 of the named vehicle within the last step.
         '''
         self.accel = traci.vehicle.getAcceleration(self.ID)
 
-    def getL(self):
+    def getL(self): #ROS
         '''
         :return: None, but sets index of the lane in which the vehicle resides.
         '''
         self.lane = traci.vehicle.getLaneIndex(self.ID)
 
-    def chL(self,L):
+    def chL(self,L): #ROS
         '''
         :function: pefroms the lane change action
         :param L: Index of Lane to change lane to.
@@ -107,7 +107,7 @@ class Vehicle:
         '''
         traci.vehicle.setSpeed(self.ID,-1)
 
-    def inst_acc(self, acc):
+    def inst_acc(self, acc): #ROS
         ''' accelerate instantaneously'''
         self.getSpd() #get current speed
         traci.vehicle.setSpeed(self.ID, max( 0.0 , min(int(self.spd  + acc), int(self.max_speed))))
@@ -424,12 +424,12 @@ def run():
 
         traci.simulationStep()
 
-        vehicles_list = [LH, RB]
+        vehicles_list = [LH, RB] #TODO: Move outside loop
 
         getters(vehicles_list)
 
 
-        Proudhon = env(vehicles_list) #[LH, RB]
+        Proudhon = env(vehicles_list) #[LH, RB] #TODO: Move outside loop
         Proudhon.measure_full_state()
         Proudhon.get_feasible_actions(RB)
 
@@ -450,6 +450,13 @@ def run():
                 print("We are done here BUT I DON'T KNOW WHY!")
 
             break
+
+
+        #if(step>10 and step<30):
+        #    RB.inst_acc(1)
+
+        if(step >0):
+            RB.inst_acc(1)
 
         """
         if step ==10:
@@ -489,7 +496,7 @@ def run():
 
 
 # main entry point
-if __name__ == "__main__":
+if __name__ == "__ main__":
     options = get_options()
 
     # check binary
