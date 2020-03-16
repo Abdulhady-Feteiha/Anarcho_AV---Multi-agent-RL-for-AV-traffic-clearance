@@ -41,7 +41,7 @@ class Vehicle:
         self.type = traci.vehicle.getTypeID(self.ID)
         self.max_speed = traci.vehicle.getMaxSpeed(self.ID)
 
-    def getSpd(self):
+    def getSpd(self): #ROS
         '''
         :return: vehicle speed in m/sec over last step. This is the speed that will be continued with if no intereference
         occurs from setSpeed or slowDown functions.
@@ -58,7 +58,7 @@ class Vehicle:
             pass #EDIT #Is this useful? I think it's a remenant. #Waleed
             #print("Warning,current route status: "+traci.vehicle.getRoadID(self.ID) )
 
-    def getPose(self):
+    def getPose(self): #ROS
         '''
         :return: return the position of the vehicle's front tip in the lane (lane: 0,1 currently).
         Accounts for different routes.
@@ -67,19 +67,19 @@ class Vehicle:
         if(self.route > self.base_route):
             self.lane_pose +=  self.length_of_base_route
 
-    def getAcc(self):
+    def getAcc(self): #ROS
         '''
         :return: Returns the acceleration in m/s^2 of the named vehicle within the last step.
         '''
         self.accel = traci.vehicle.getAcceleration(self.ID)
 
-    def getL(self):
+    def getL(self): #ROS
         '''
         :return: None, but sets index of the lane in which the vehicle resides.
         '''
         self.lane = traci.vehicle.getLaneIndex(self.ID)
 
-    def chL(self,L):
+    def chL(self,L): #ROS
         '''
         :function: pefroms the lane change action
         :param L: Index of Lane to change lane to.
@@ -107,10 +107,12 @@ class Vehicle:
         '''
         traci.vehicle.setSpeed(self.ID,-1)
 
-    def inst_acc(self, acc):
+    def inst_acc(self, acc): #ROS
         ''' accelerate instantaneously'''
         self.getSpd() #get current speed
-        traci.vehicle.setSpeed(self.ID, np.min(int(self.spd  + acc), int(self.max_speed)))
+        traci.vehicle.setSpeed(self.ID, max( 0.0 , min(int(self.spd  + acc), int(self.max_speed))))
+        #minimum velocity: 0.0 -> Handled by Code, not SUMO. Sumo ignores command if velocity is negative.
+        #maximum velocity: self.max_speed -> Handled by SUMO, so code here is redundant.
 
 
 
@@ -176,7 +178,7 @@ def CalcDist(emer,agent):
 
 class RLAlgorithm():
     '''
-    Access order for the Q_table is [agent_vel][agent_lane][amb_vel][amb_lane][rel_amb_y][action]
+    Access order for the Q_table is [agent_vel][agent_lane][amb_vel][amb_lane][rel_amb_y][action].. remember to change the value rel_amb_y to be positive [0,58]
     '''
 
     def __init__(self, environment, name="Q-learning"):
@@ -233,13 +235,15 @@ class RLAlgorithm():
 
 class env():
 
-    def __init__(self, list_of_vehicles, name="SingleAgentEvn0.1"):
+    def __init__(self, list_of_vehicles, name="SingleAgentEvn0.1", max_steps=1000, ambulance_goal_distance=500):
 
         self.name = name
         self.list_of_vehicles = list_of_vehicles
+        self.max_steps = max_steps
+        self.amb_goal_dist = ambulance_goal_distance
 
-        self.agents = []
-        self.emer = None
+        self.agents = [] #Stays as is in multiagent
+        self.emer = None #Stays as is in multiagent
 
         self.hidden_state = None
         self.observed_state = None
@@ -384,31 +388,75 @@ class env():
 
         print(f'Feasible actions: ', feasible_actions)
 
+    def are_we_done(self, full_state, step_number):
+        #full_state: currently not used since we have the ambulance object.
+
+        amb_abs_y = self.full_state[-1][-1] #Please refer to shape of full_state list in env.measure_full_state()
+
+
+        #1: steps == max_steps-1
+        if(step_number == self.max_steps-1):
+            return 1
+        #2: goal reached
+        elif(amb_abs_y > self.amb_goal_dist - self.emer.max_speed-1 ):
+            # TODO: Change NET file to have total distance = 511. Then we can have the condition to compare with 500 directly.
+            return 2 #GOAL IS NOW 500-10-1 = 489 cells ahead. To avoid ambulance car eacaping
+
+        for agent_index in range( self.count_ego_vehicles ):
+            agent_abs_y = self.full_state[-1][agent_index] # #Please refer to shape of full_state list in env.measure_full_state
+                                                            # hidden_state shape: [ agent_abs_y ... for vehicle in vehicles , amb_abs_y]
+            if (agent_abs_y > self.amb_goal_dist - self.emer.max_speed - 1):
+                return 3
+
+
+
+        # 0: not done
+        return 0
 
 
 
 def run():
     step = 0
 
-    LH.chL(0)
+    #LH.chL(0) #No need for this now, automatic lane change is removed. Checkout Vehicle.__init__() : traci.vehicle.setLaneChangeMode(self.ID, 256)
 
-    #print("Hello world, I'm an AV, and I love carrots")
     while traci.simulation.getMinExpectedNumber() > 0:
 
         traci.simulationStep()
 
-        vehicles_list = [LH, RB]
+        vehicles_list = [LH, RB] #TODO: Move outside loop
 
         getters(vehicles_list)
 
 
-        Proudhon = env(vehicles_list) #[LH, RB]
+        Proudhon = env(vehicles_list) #[LH, RB] #TODO: Move outside loop
         Proudhon.measure_full_state()
         Proudhon.get_feasible_actions(RB)
 
         print(step,' : ','[agent_vel , agent_lane , amb_vel , amb_lane , rel_amb_y]')
         print(step,' :  ',Proudhon.observed_state)
         step += 1
+
+        done = Proudhon.are_we_done(full_state=Proudhon.full_state, step_number=step)
+
+        if(done):
+            if(done == 1):
+                print("We are done here due to PASSING MAX STEPS NUMBER!")
+            elif(done == 2):
+                print("We are done here due to AMBULANCE PASSING THE GOAL!")
+            elif(done == 3): #TODO: #TOFIX: What should be the state here?
+                print("We are done here due to AGENT PASSING THE GOAL!")
+            else:
+                print("We are done here BUT I DON'T KNOW WHY!")
+
+            break
+
+
+        #if(step>10 and step<30):
+        #    RB.inst_acc(1)
+
+        if(step >0):
+            RB.inst_acc(1)
 
         """
         if step ==10:
@@ -448,7 +496,7 @@ def run():
 
 
 # main entry point
-if __name__ == "__main__":
+if __name__ == "__ main__":
     options = get_options()
 
     # check binary
