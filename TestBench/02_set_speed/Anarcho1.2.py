@@ -148,7 +148,7 @@ def run():
 
         traci.simulationStep()
 
-        vehicles_list = [LH, RB]
+        vehicles_list = [LH , RB]
         if step>2:
             getters(vehicles_list)
             print("emer speed: ",LH.spd)
