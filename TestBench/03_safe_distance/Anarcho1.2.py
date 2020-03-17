@@ -142,61 +142,31 @@ def run():
     step = 0
 
     LH.chL(0)
-    traci.vehicle.setSpeed(LH.ID,3)
-    #print("Hello world, I'm an AV, and I love carrots")
+
     while traci.simulation.getMinExpectedNumber() > 0:
 
         traci.simulationStep()
 
         vehicles_list = [LH , RB]
-        if step>2:
-            getters(vehicles_list)
-            print("emer speed: ",LH.spd)
-            print("agent speed: ",RB.spd)
-            if step >=10:
-                print("Trying to set emer speed to 20")
-                traci.vehicle.setSpeed(LH.ID,20)
-                if LH.spd<=3:
-                    print('Negative, no response from the vehicle')
-                elif LH.spd>3 and LH.spd<=11:
-                    print('emer increased speed reaching the agent')
-                elif LH.spd>11:
-                    print('Positive, emer is on 20 m/s')
 
+        if (step>=3):
+
+
+            LH_pos=traci.vehicle.getLanePosition(LH.ID)
+            RB_pos = traci.vehicle.getLanePosition(RB.ID)
+
+            difference = round(RB_pos-LH_pos,1)
+            w_difference = traci.vehicle.getMinGap(LH.ID)+traci.vehicle.getSpeed(RB.ID)+traci.vehicle.getLength(RB.ID)
+
+            print("difference",round(difference,1))
+            print ("is our guess right ?", difference == w_difference)
+            print ("w_difference",w_difference)
+            print("minGap",traci.vehicle.getMinGap(LH.ID))
 
 
         step += 1
 
-        """
-        if step ==10:
-            LH.chL(fast)
 
-            Proudhon = Anarchia(LH,RB)
-            Proudhon.pickAction()
-            Proudhon.takeAction()
-            Proudhon.memory()
-
-        elif step%10==0 and step>10:
-
-            Proudhon.evaluate()
-            Proudhon.pickAction()
-            Proudhon.takeAction()
-            Proudhon.memory()
-
-
-            #print("time ",getArrivTime(LH,RB))
-        if step%1000==0 and step>=1000:
-            print(step)
-            print("Arrive time ", getArrivTime(LH,RB))
-            print(Q)
-            Q_Table = pd.DataFrame({'Change Lane': Q[:, 0], 'Accelerate': Q[:, 1],'Decelerate': Q[:, 2],'Do no thing': Q[:, 3]})
-
-            Q_Table.to_csv('Results/Q_Table_step='+str(step)+'.csv', index=False)
-        if step ==SimTime:
-            break
-
-
-        """
 
 
 

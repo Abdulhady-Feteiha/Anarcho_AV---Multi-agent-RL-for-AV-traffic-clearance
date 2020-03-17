@@ -368,6 +368,7 @@ def run():
     A.chL(0)
 
     #print("Hello world, I'm an AV, and I love carrots")
+    # this function ( traci.simulation.getMinExpectedNumber )is for  looping over all available vehicles
     while traci.simulation.getMinExpectedNumber() > 0:
 
         traci.simulationStep()
@@ -381,7 +382,7 @@ def run():
         Proudhon.measure_full_state()
         Proudhon.get_feasible_actions(A)
 
-        print(step,' : ',' [agent_vel, agent_lane, agent_abs_y] ')
+        print(step,' : ',' [agent_vel, agent_lane, agent_abs_y] ') # question
         print(step,' :  ',Proudhon.observed_state)
         step += 1
 

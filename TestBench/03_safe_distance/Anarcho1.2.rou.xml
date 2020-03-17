@@ -1,0 +1,20 @@
+<routes>
+
+      <vType id="Emergency" length="3.0" maxSpeed="10.0" sigma="0.0" color='1,0,0' depart= "0.0" minGap="8" />
+     
+      <vType id="Ego" length="2.0" maxSpeed="2" sigma="0.0" color='0,0,1' depart="0.0"  />
+
+      <route id="Emer_route" edges="r1 r2"/>
+      <route id="Ego_route" edges="r2"/>
+       
+
+
+      <vehicle depart="0" id="LH" route="Emer_route" type="Emergency" departPos="0"    />
+ 
+      <vehicle depart="0" id="RB" route="Emer_route" type="Ego" departPos="10"  />  
+      
+      <!-- depart: speed of start for the vehicle -->
+      <!-- edges: sequence of routes for vehicle-->
+      <!-- r1L for ego only, -->
+
+</routes>
