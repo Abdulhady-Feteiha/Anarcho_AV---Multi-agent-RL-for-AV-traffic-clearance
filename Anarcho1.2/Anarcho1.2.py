@@ -157,7 +157,7 @@ def defGlobals():
     speed_range = np.arange(0,30,5)
     fast = 0
     slow = 1
-    track_len = 4000
+    track_len = 500
     LH = Vehicle("LH")
     RB = Vehicle("RB")
     SimTime = 1000
@@ -238,11 +238,10 @@ class RLAlgorithm():
 
 class env():
 
-    def __init__(self, list_of_vehicles, name="SingleAgentEvn0.1", max_steps=1000, ambulance_goal_distance=500):
+    def __init__(self, list_of_vehicles, name="SingleAgentEvn0.1",  ambulance_goal_distance=500):
 
         self.name = name
         self.list_of_vehicles = list_of_vehicles
-        self.max_steps = max_steps
         self.amb_goal_dist = ambulance_goal_distance
 
         self.agents = [] #Stays as is in multiagent
@@ -263,7 +262,6 @@ class env():
             "no_acc": 3,
             "dec": 4
         }  # Must maintain order in Actions
-
 
 
         for vhcl in self.list_of_vehicles:
@@ -294,6 +292,9 @@ class env():
             raise ValueError(
                 'WaleedError: Failed to initialize environment. No emergency vehicles were used in the evnironment.'
             )
+
+        self.optimal_time = int(np.round(track_len/self.emer.max_speed))  #Optimal Number of time steps: number of time steps taken by ambulance at maximum speed
+        self.max_steps = 20*self.optimal_time
 
     def measure_full_state(self):
 
@@ -456,6 +457,45 @@ class env():
         print(f'Feasible actions: ', feasible_actions)
         return feasible_actions
 
+    def calc_reward(self, amb_last_velocity, done, number_of_steps, max_final_reward = 20, min_final_reward = -20, max_step_reward=0, min_step_reward = -1.25):
+        '''
+        :logic: Calculate reward to agent from current state
+        :param amb_last_velocity: float, previous velocity the ambulance (self.emer) had
+        :param done: bool, whether this is the last step in the simulation or not (whether to calculate final reward or step rewrard)
+        :param number_of_steps: number of steps in simulation so far. Used to calculate final reward but not step reward
+        :param max_final_reward: reward for achieving end of simulation (done) with number_of_steps = self.optimal time
+        :param min_final_reward: reward for achieving end of simulation (done) with number_of_steps = 20 * self.optimal time
+        :param max_step_reward: reward for having an acceleration of value = self.emer.max_accel (=2) over last step
+        :param min_step_reward: reward for having an acceleration of value = - self.emer.max_accel (=- 2) over last step
+        :return: reward (either step reward or final reward)
+
+
+        :Notes:
+        #Simulation Time is not allowed to continue after 20*optimal_time (20* time steps with ambulance at its maximum speed)
+        '''
+
+        if(done): #Calculate a final reward
+            #Linear reward. y= mx +c. y: reward, x: ration between time achieved and optimal time. m: slope. c: y-intercept
+            m = ( (max_final_reward - min_final_reward) *20 ) /19 #Slope for straight line equation to calculate final reward
+            c = max_final_reward - 1*m #c is y-intercept for the reward function equation #max_final_reward is the y for x = 1
+            reward = m * (self.optimal_time/number_of_steps) + c
+            #debug#print(f'c: {c}, m: {m}, steps: {number_of_steps}, optimal_time: {self.optimal_time}')
+            return reward
+
+        else: #Calcualate a step reward
+            steps_needed_to_halt = 30
+            ration_of_halt_steps_to_total_steps = steps_needed_to_halt/track_len
+            m = (max_step_reward - min_step_reward)/(2 * self.emer.max_accel)  # Slope for straight line equation to calculate step reward
+            #2 * self.emer.max_accel since: = self.emer.max_accel - * self.emer.max_decel
+            c = max_step_reward - self.emer.max_accel * m  # c is y-intercept for the reward function equation #max_step_reward is the y for x = 2 (max acceleration)
+            reward = m * (self.emer.spd - amb_last_velocity) + c
+            print(f'c: {c}, m: {m}, accel: {(self.emer.spd - amb_last_velocity)}')
+
+            if (abs(self.emer.spd - amb_last_velocity) <= 1e-10 and abs(amb_last_velocity-self.emer.max_speed) <= 1e-10):
+            #since ambulance had maximum speed and speed did not change that much; unless we applied the code below.. the acceleration
+            #   will be wrongly assumed to be zero. Although the ambulance probably could have accelerated more, but this is its maximum velocity.
+                reward = max_step_reward #same reward as maximum acceleration (+2),
+            return reward
 
 
 
@@ -464,9 +504,12 @@ def run():
 
     vehicles_list = [LH, RB]
     Proudhon = env(vehicles_list)  # [LH, RB]
+    traci.simulationStep()  # apply_action
+    getters(vehicles_list)
     #LH.chL(0) #No need for this now, automatic lane change is removed. Checkout Vehicle.__init__() : traci.vehicle.setLaneChangeMode(self.ID, 256)
-
     while traci.simulation.getMinExpectedNumber() > 0:
+
+        amb_last_velocity = Proudhon.emer.spd
 
         traci.simulationStep() #apply_action
         step += 1
@@ -480,9 +523,9 @@ def run():
         print(step,' : ','[agent_vel , agent_lane , amb_vel , amb_lane , rel_amb_y]')
         print(step,' :  ',Proudhon.observed_state)
 
-
-
         done = Proudhon.are_we_done(full_state=Proudhon.full_state, step_number=step)
+
+        print("reward: ", Proudhon.calc_reward(amb_last_velocity, done, step) )
 
         if(done):
             if(done == 1):
