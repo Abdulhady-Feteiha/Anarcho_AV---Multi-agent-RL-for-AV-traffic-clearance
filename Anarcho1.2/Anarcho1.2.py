@@ -5,7 +5,7 @@ import optparse
 from math import sqrt, ceil
 from random import randrange
 import numpy as np
-import pandas as pd
+import warnings; do_warn = False
 
 # we need to import some python modules from the $SUMO_HOME/tools directory
 if 'SUMO_HOME' in os.environ:
@@ -40,6 +40,8 @@ class Vehicle:
         ref: https://sumo.dlr.de/docs/TraCI/Change_Vehicle_State.html#lane_change_mode_0xb6'''
         self.type = traci.vehicle.getTypeID(self.ID)
         self.max_speed = traci.vehicle.getMaxSpeed(self.ID)
+        self.max_accel = traci.vehicle.getAccel(self.ID)
+        self.max_decel = traci.vehicle.getDecel(self.ID)
 
     def getSpd(self): #ROS
         '''
@@ -59,6 +61,7 @@ class Vehicle:
             #print("Warning,current route status: "+traci.vehicle.getRoadID(self.ID) )
 
     def getPose(self): #ROS
+        #TODO: Change this function to depend on  getDistanceRoad(self, edgeID1, pos1, edgeID2, pos2, isDriving=False)
         '''
         :return: return the position of the vehicle's front tip in the lane (lane: 0,1 currently).
         Accounts for different routes.
@@ -350,44 +353,6 @@ class env():
         self.observed_state = observed_state
         self.full_state = [observed_state, hidden_state]
 
-    def get_feasible_actions(self, agent):
-
-        feasible_actions = self.Actions.copy()  # Initially, before checking
-
-        left = 1
-        right = -1
-        change_left_possible  = traci.vehicle.couldChangeLane(agent.ID, left, state=None)
-        change_right_possible = traci.vehicle.couldChangeLane(agent.ID, right, state=None)
-
-        #TODO:
-        #Acceleration and deceleration check.
-        #Do Nothing should be always feasible since SUMO/Autonomous functionality will not allow vehicles to crash.
-
-
-
-        '''
-        couldChangeLane: Return bool indicating whether the vehicle could change lanes in the specified direction 
-        (right: -1, left: 1. sublane-change within current lane: 0).
-        #Check function here https://sumo.dlr.de/docs/TraCI/Vehicle_Value_Retrieval.html 
-        #NOTE: getLaneChangeState return much more details about who blocked, if blocking .. etc. 
-            #Details: https://sumo.dlr.de/docs/TraCI/Vehicle_Value_Retrieval.html#change_lane_information_0x13
-        '''
-        if(change_left_possible):
-            print(f'Agent {agent.ID} can change lane to LEFT lane.')
-        else:
-            del feasible_actions[self.action_to_string_dict["change_left"]]
-            #TODO: DO NOT INDEX .. will produce error if more than one action is removed
-            print(f'Agent {agent.ID} //CAN NOT// change lane to LEFT lane.')
-
-        if (change_right_possible):
-            print(f'Agent {agent.ID} can change lane to RIGHT lane.')
-        else:
-            del feasible_actions[self.action_to_string_dict["change_right"]] #TODO: DO NOT INDEX .. will produce error if more than one action is removedd
-            print(f'Agent {agent.ID} //CAN NOT// change lane to RIGHT lane.')
-
-
-        print(f'Feasible actions: ', feasible_actions)
-
     def are_we_done(self, full_state, step_number):
         #full_state: currently not used since we have the ambulance object.
 
@@ -413,29 +378,109 @@ class env():
         # 0: not done
         return 0
 
+    def get_vehicle_object_by_id(self, vehID):
+        '''
+        :param vehID: string, ID of the vehicle to get the Vehicle object for
+        :return: Vehicle, object that has the ID equal to vehID
+        '''
+        for vhc in self.list_of_vehicles:
+            if vhc.ID == vehID :
+                return vhc
+        return None #If vehID does not belong to any vehicle, None value is returned
+
+    def get_follow_speed_by_id(self, vehID):
+
+        agent = self.get_vehicle_object_by_id(vehID)
+        leader_data = traci.vehicle.getLeader(LH.ID)
+
+        if(leader_data is None): #If no leader found (i.e. there are no leading vehicles), return max_speed for vehicle with vehID
+            return agent.max_speed
+        #else:
+        leader_id, distance_to_leader = leader_data #distance to leader (in our terms) = gap - leader_length - my_minGap
+        leading_vehicle = self.get_vehicle_object_by_id(leader_id)
+
+        follow_speed = traci.vehicle.getFollowSpeed(agent.ID, agent.max_speed, distance_to_leader, leading_vehicle.spd, agent.max_decel, leading_vehicle.ID)
+
+        return follow_speed
+
+    def get_feasible_actions(self, agent):
+        '''
+        :param agent: Vehicle object, vehicle for which we want to check the feasible actions. The set of possible actions
+                        is assumed to be: ["change_left", "change_right", "acc", "dec", "no_acc"] (hard-coded)
+        :return feasible_actions: list of strings, representing actions that are feasible to take in this step to apply over the
+                next step.
+        '''
+
+        feasible_actions = self.Actions.copy()  # Initially, before checking
+
+        left = 1
+        right = -1
+        change_left_possible = traci.vehicle.couldChangeLane(agent.ID, left, state=None)
+        change_right_possible = traci.vehicle.couldChangeLane(agent.ID, right, state=None)
+        decelrate_possible = True  # Always true because of how SUMO depends on the Car Follower model and thus avoids maximum decleration hits.
+        # Review TestBench Test Case 06 results for more info.
+        accelerate_possible = min(agent.max_speed, agent.spd + agent.max_accel) <= self.get_follow_speed_by_id(
+            agent.ID)  # NOTE: Checks if maximum acceleration is possible
+        # Do Nothing should be always feasible since SUMO/Autonomous functionality will not allow vehicles to crash.
+
+        if (agent.max_accel > 1.0 and do_warn): warnings.warn(
+            f"Please note that agent {agent.ID} has maximum acceleration > 1.0. "
+            f"Function env.get_feasible_actions(agent) checks if self.spd+self.max_accel is feasible.")
+
+        '''
+        couldChangeLane: Return bool indicating whether the vehicle could change lanes in the specified direction 
+        (right: -1, left: 1. sublane-change within current lane: 0).
+        #Check function here https://sumo.dlr.de/docs/TraCI/Vehicle_Value_Retrieval.html 
+        #NOTE: getLaneChangeState return much more details about who blocked, if blocking .. etc. 
+            #Details: https://sumo.dlr.de/docs/TraCI/Vehicle_Value_Retrieval.html#change_lane_information_0x13
+        '''
+        if (change_left_possible):
+            print(f'Agent {agent.ID} can change lane to LEFT lane.')
+        else:
+            feasible_actions.remove("change_left")
+            print(f'Agent {agent.ID} //CAN NOT// change lane to LEFT lane.')
+
+        if (change_right_possible):
+            print(f'Agent {agent.ID} can change lane to RIGHT lane.')
+        else:
+            feasible_actions.remove("change_right")
+            print(f'Agent {agent.ID} //CAN NOT// change lane to RIGHT lane.')
+
+        if (accelerate_possible):
+            print(f'Agent {agent.ID} can ACCELERATE.. next expected velocity = {self.get_follow_speed_by_id(agent.ID)}')
+        else:
+            feasible_actions.remove("acc")
+            print(
+                f'Agent {agent.ID} can NOT ACCELERATE.. next expected velocity = {self.get_follow_speed_by_id(agent.ID)}')
+
+        print(f'Feasible actions: ', feasible_actions)
+        return feasible_actions
+
+
 
 
 def run():
     step = 0
 
+    vehicles_list = [LH, RB]
+    Proudhon = env(vehicles_list)  # [LH, RB]
     #LH.chL(0) #No need for this now, automatic lane change is removed. Checkout Vehicle.__init__() : traci.vehicle.setLaneChangeMode(self.ID, 256)
 
     while traci.simulation.getMinExpectedNumber() > 0:
 
-        traci.simulationStep()
-
-        vehicles_list = [LH, RB] #TODO: Move outside loop
+        traci.simulationStep() #apply_action
+        step += 1
 
         getters(vehicles_list)
 
-
-        Proudhon = env(vehicles_list) #[LH, RB] #TODO: Move outside loop
         Proudhon.measure_full_state()
         Proudhon.get_feasible_actions(RB)
+        Proudhon.get_feasible_actions(LH)
 
         print(step,' : ','[agent_vel , agent_lane , amb_vel , amb_lane , rel_amb_y]')
         print(step,' :  ',Proudhon.observed_state)
-        step += 1
+
+
 
         done = Proudhon.are_we_done(full_state=Proudhon.full_state, step_number=step)
 
@@ -452,51 +497,13 @@ def run():
             break
 
 
-        #if(step>10 and step<30):
-        #    RB.inst_acc(1)
-
-        if(step >0):
-            RB.inst_acc(1)
-
-        """
-        if step ==10:
-            LH.chL(fast)
-
-            Proudhon = Anarchia(LH,RB)
-            Proudhon.pickAction()
-            Proudhon.takeAction()
-            Proudhon.memory()
-
-        elif step%10==0 and step>10:
-
-            Proudhon.evaluate()
-            Proudhon.pickAction()
-            Proudhon.takeAction()
-            Proudhon.memory()
-
-
-            #print("time ",getArrivTime(LH,RB))
-        if step%1000==0 and step>=1000:
-            print(step)
-            print("Arrive time ", getArrivTime(LH,RB))
-            print(Q)
-            Q_Table = pd.DataFrame({'Change Lane': Q[:, 0], 'Accelerate': Q[:, 1],'Decelerate': Q[:, 2],'Do no thing': Q[:, 3]})
-
-            Q_Table.to_csv('Results/Q_Table_step='+str(step)+'.csv', index=False)
-        if step ==SimTime:
-            break
-        
-
-        """
-
-
 
     traci.close()
     sys.stdout.flush()
 
 
 # main entry point
-if __name__ == "__ main__":
+if __name__ == "__main__":
     options = get_options()
 
     # check binary
