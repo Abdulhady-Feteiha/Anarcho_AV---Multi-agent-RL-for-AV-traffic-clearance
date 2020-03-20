@@ -152,9 +152,6 @@ def measure():
         RB.chL(0)
         traci.vehicle.setSpeed(RB.ID,0)
         if step ==2:
-            emer_lane_ID = traci.vehicle.getLaneID(LH.ID)
-            agent_lane_ID = traci.vehicle.getLaneID(RB.ID)
-
             getters(vehicles_list)
         elif step>2:
             lastStepSpd = LH.spd
