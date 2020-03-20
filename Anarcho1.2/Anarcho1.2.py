@@ -5,7 +5,7 @@ import optparse
 from math import sqrt, ceil
 from random import randrange
 import numpy as np
-import pandas as pd
+import warnings; do_warn = False
 
 # we need to import some python modules from the $SUMO_HOME/tools directory
 if 'SUMO_HOME' in os.environ:
@@ -40,8 +40,10 @@ class Vehicle:
         ref: https://sumo.dlr.de/docs/TraCI/Change_Vehicle_State.html#lane_change_mode_0xb6'''
         self.type = traci.vehicle.getTypeID(self.ID)
         self.max_speed = traci.vehicle.getMaxSpeed(self.ID)
+        self.max_accel = traci.vehicle.getAccel(self.ID)
+        self.max_decel = traci.vehicle.getDecel(self.ID)
 
-    def getSpd(self):
+    def getSpd(self): #ROS
         '''
         :return: vehicle speed in m/sec over last step. This is the speed that will be continued with if no intereference
         occurs from setSpeed or slowDown functions.
@@ -58,7 +60,8 @@ class Vehicle:
             pass #EDIT #Is this useful? I think it's a remenant. #Waleed
             #print("Warning,current route status: "+traci.vehicle.getRoadID(self.ID) )
 
-    def getPose(self):
+    def getPose(self): #ROS
+        #TODO: Change this function to depend on  getDistanceRoad(self, edgeID1, pos1, edgeID2, pos2, isDriving=False)
         '''
         :return: return the position of the vehicle's front tip in the lane (lane: 0,1 currently).
         Accounts for different routes.
@@ -67,19 +70,19 @@ class Vehicle:
         if(self.route > self.base_route):
             self.lane_pose +=  self.length_of_base_route
 
-    def getAcc(self):
+    def getAcc(self): #ROS
         '''
         :return: Returns the acceleration in m/s^2 of the named vehicle within the last step.
         '''
         self.accel = traci.vehicle.getAcceleration(self.ID)
 
-    def getL(self):
+    def getL(self): #ROS
         '''
         :return: None, but sets index of the lane in which the vehicle resides.
         '''
         self.lane = traci.vehicle.getLaneIndex(self.ID)
 
-    def chL(self,L):
+    def chL(self,L): #ROS
         '''
         :function: pefroms the lane change action
         :param L: Index of Lane to change lane to.
@@ -107,10 +110,12 @@ class Vehicle:
         '''
         traci.vehicle.setSpeed(self.ID,-1)
 
-    def inst_acc(self, acc):
+    def inst_acc(self, acc): #ROS
         ''' accelerate instantaneously'''
         self.getSpd() #get current speed
-        traci.vehicle.setSpeed(self.ID, np.min(int(self.spd  + acc), int(self.max_speed)))
+        traci.vehicle.setSpeed(self.ID, max( 0.0 , min(int(self.spd  + acc), int(self.max_speed))))
+        #minimum velocity: 0.0 -> Handled by Code, not SUMO. Sumo ignores command if velocity is negative.
+        #maximum velocity: self.max_speed -> Handled by SUMO, so code here is redundant.
 
 
 
@@ -152,7 +157,7 @@ def defGlobals():
     speed_range = np.arange(0,30,5)
     fast = 0
     slow = 1
-    track_len = 4000
+    track_len = 500
     LH = Vehicle("LH")
     RB = Vehicle("RB")
     SimTime = 1000
@@ -176,7 +181,7 @@ def CalcDist(emer,agent):
 
 class RLAlgorithm():
     '''
-    Access order for the Q_table is [agent_vel][agent_lane][amb_vel][amb_lane][rel_amb_y][action]
+    Access order for the Q_table is [agent_vel][agent_lane][amb_vel][amb_lane][rel_amb_y][action].. remember to change the value rel_amb_y to be positive [0,58]
     '''
 
     def __init__(self, environment, name="Q-learning"):
@@ -233,13 +238,14 @@ class RLAlgorithm():
 
 class env():
 
-    def __init__(self, list_of_vehicles, name="SingleAgentEvn0.1"):
+    def __init__(self, list_of_vehicles, name="SingleAgentEvn0.1",  ambulance_goal_distance=500):
 
         self.name = name
         self.list_of_vehicles = list_of_vehicles
+        self.amb_goal_dist = ambulance_goal_distance
 
-        self.agents = []
-        self.emer = None
+        self.agents = [] #Stays as is in multiagent
+        self.emer = None #Stays as is in multiagent
 
         self.hidden_state = None
         self.observed_state = None
@@ -256,7 +262,6 @@ class env():
             "no_acc": 3,
             "dec": 4
         }  # Must maintain order in Actions
-
 
 
         for vhcl in self.list_of_vehicles:
@@ -287,6 +292,9 @@ class env():
             raise ValueError(
                 'WaleedError: Failed to initialize environment. No emergency vehicles were used in the evnironment.'
             )
+
+        self.optimal_time = int(np.round(track_len/self.emer.max_speed))  #Optimal Number of time steps: number of time steps taken by ambulance at maximum speed
+        self.max_steps = 20*self.optimal_time
 
     def measure_full_state(self):
 
@@ -346,20 +354,79 @@ class env():
         self.observed_state = observed_state
         self.full_state = [observed_state, hidden_state]
 
+    def are_we_done(self, full_state, step_number):
+        #full_state: currently not used since we have the ambulance object.
+
+        amb_abs_y = self.full_state[-1][-1] #Please refer to shape of full_state list in env.measure_full_state()
+
+
+        #1: steps == max_steps-1
+        if(step_number == self.max_steps-1):
+            return 1
+        #2: goal reached
+        elif(amb_abs_y > self.amb_goal_dist - self.emer.max_speed-1 ):
+            # TODO: Change NET file to have total distance = 511. Then we can have the condition to compare with 500 directly.
+            return 2 #GOAL IS NOW 500-10-1 = 489 cells ahead. To avoid ambulance car eacaping
+
+        for agent_index in range( self.count_ego_vehicles ):
+            agent_abs_y = self.full_state[-1][agent_index] # #Please refer to shape of full_state list in env.measure_full_state
+                                                            # hidden_state shape: [ agent_abs_y ... for vehicle in vehicles , amb_abs_y]
+            if (agent_abs_y > self.amb_goal_dist - self.emer.max_speed - 1):
+                return 3
+
+
+
+        # 0: not done
+        return 0
+
+    def get_vehicle_object_by_id(self, vehID):
+        '''
+        :param vehID: string, ID of the vehicle to get the Vehicle object for
+        :return: Vehicle, object that has the ID equal to vehID
+        '''
+        for vhc in self.list_of_vehicles:
+            if vhc.ID == vehID :
+                return vhc
+        return None #If vehID does not belong to any vehicle, None value is returned
+
+    def get_follow_speed_by_id(self, vehID):
+
+        agent = self.get_vehicle_object_by_id(vehID)
+        leader_data = traci.vehicle.getLeader(LH.ID)
+
+        if(leader_data is None): #If no leader found (i.e. there are no leading vehicles), return max_speed for vehicle with vehID
+            return agent.max_speed
+        #else:
+        leader_id, distance_to_leader = leader_data #distance to leader (in our terms) = gap - leader_length - my_minGap
+        leading_vehicle = self.get_vehicle_object_by_id(leader_id)
+
+        follow_speed = traci.vehicle.getFollowSpeed(agent.ID, agent.max_speed, distance_to_leader, leading_vehicle.spd, agent.max_decel, leading_vehicle.ID)
+
+        return follow_speed
+
     def get_feasible_actions(self, agent):
+        '''
+        :param agent: Vehicle object, vehicle for which we want to check the feasible actions. The set of possible actions
+                        is assumed to be: ["change_left", "change_right", "acc", "dec", "no_acc"] (hard-coded)
+        :return feasible_actions: list of strings, representing actions that are feasible to take in this step to apply over the
+                next step.
+        '''
 
         feasible_actions = self.Actions.copy()  # Initially, before checking
 
         left = 1
         right = -1
-        change_left_possible  = traci.vehicle.couldChangeLane(agent.ID, left, state=None)
+        change_left_possible = traci.vehicle.couldChangeLane(agent.ID, left, state=None)
         change_right_possible = traci.vehicle.couldChangeLane(agent.ID, right, state=None)
+        decelrate_possible = True  # Always true because of how SUMO depends on the Car Follower model and thus avoids maximum decleration hits.
+        # Review TestBench Test Case 06 results for more info.
+        accelerate_possible = min(agent.max_speed, agent.spd + agent.max_accel) <= self.get_follow_speed_by_id(
+            agent.ID)  # NOTE: Checks if maximum acceleration is possible
+        # Do Nothing should be always feasible since SUMO/Autonomous functionality will not allow vehicles to crash.
 
-        #TODO:
-        #Acceleration and deceleration check.
-        #Do Nothing should be always feasible since SUMO/Autonomous functionality will not allow vehicles to crash.
-
-
+        if (agent.max_accel > 1.0 and do_warn): warnings.warn(
+            f"Please note that agent {agent.ID} has maximum acceleration > 1.0. "
+            f"Function env.get_feasible_actions(agent) checks if self.spd+self.max_accel is feasible.")
 
         '''
         couldChangeLane: Return bool indicating whether the vehicle could change lanes in the specified direction 
@@ -368,78 +435,109 @@ class env():
         #NOTE: getLaneChangeState return much more details about who blocked, if blocking .. etc. 
             #Details: https://sumo.dlr.de/docs/TraCI/Vehicle_Value_Retrieval.html#change_lane_information_0x13
         '''
-        if(change_left_possible):
+        if (change_left_possible):
             print(f'Agent {agent.ID} can change lane to LEFT lane.')
         else:
-            del feasible_actions[self.action_to_string_dict["change_left"]]
-            #TODO: DO NOT INDEX .. will produce error if more than one action is removed
+            feasible_actions.remove("change_left")
             print(f'Agent {agent.ID} //CAN NOT// change lane to LEFT lane.')
 
         if (change_right_possible):
             print(f'Agent {agent.ID} can change lane to RIGHT lane.')
         else:
-            del feasible_actions[self.action_to_string_dict["change_right"]] #TODO: DO NOT INDEX .. will produce error if more than one action is removedd
+            feasible_actions.remove("change_right")
             print(f'Agent {agent.ID} //CAN NOT// change lane to RIGHT lane.')
 
+        if (accelerate_possible):
+            print(f'Agent {agent.ID} can ACCELERATE.. next expected velocity = {self.get_follow_speed_by_id(agent.ID)}')
+        else:
+            feasible_actions.remove("acc")
+            print(
+                f'Agent {agent.ID} can NOT ACCELERATE.. next expected velocity = {self.get_follow_speed_by_id(agent.ID)}')
 
         print(f'Feasible actions: ', feasible_actions)
+        return feasible_actions
 
+    def calc_reward(self, amb_last_velocity, done, number_of_steps, max_final_reward = 20, min_final_reward = -20, max_step_reward=0, min_step_reward = -1.25):
+        '''
+        :logic: Calculate reward to agent from current state
+        :param amb_last_velocity: float, previous velocity the ambulance (self.emer) had
+        :param done: bool, whether this is the last step in the simulation or not (whether to calculate final reward or step rewrard)
+        :param number_of_steps: number of steps in simulation so far. Used to calculate final reward but not step reward
+        :param max_final_reward: reward for achieving end of simulation (done) with number_of_steps = self.optimal time
+        :param min_final_reward: reward for achieving end of simulation (done) with number_of_steps = 20 * self.optimal time
+        :param max_step_reward: reward for having an acceleration of value = self.emer.max_accel (=2) over last step
+        :param min_step_reward: reward for having an acceleration of value = - self.emer.max_accel (=- 2) over last step
+        :return: reward (either step reward or final reward)
+
+
+        :Notes:
+        #Simulation Time is not allowed to continue after 20*optimal_time (20* time steps with ambulance at its maximum speed)
+        '''
+
+        if(done): #Calculate a final reward
+            #Linear reward. y= mx +c. y: reward, x: ration between time achieved and optimal time. m: slope. c: y-intercept
+            m = ( (max_final_reward - min_final_reward) *20 ) /19 #Slope for straight line equation to calculate final reward
+            c = max_final_reward - 1*m #c is y-intercept for the reward function equation #max_final_reward is the y for x = 1
+            reward = m * (self.optimal_time/number_of_steps) + c
+            #debug#print(f'c: {c}, m: {m}, steps: {number_of_steps}, optimal_time: {self.optimal_time}')
+            return reward
+
+        else: #Calcualate a step reward
+            steps_needed_to_halt = 30
+            ration_of_halt_steps_to_total_steps = steps_needed_to_halt/track_len
+            m = (max_step_reward - min_step_reward)/(2 * self.emer.max_accel)  # Slope for straight line equation to calculate step reward
+            #2 * self.emer.max_accel since: = self.emer.max_accel - * self.emer.max_decel
+            c = max_step_reward - self.emer.max_accel * m  # c is y-intercept for the reward function equation #max_step_reward is the y for x = 2 (max acceleration)
+            reward = m * (self.emer.spd - amb_last_velocity) + c
+            print(f'c: {c}, m: {m}, accel: {(self.emer.spd - amb_last_velocity)}')
+
+            if (abs(self.emer.spd - amb_last_velocity) <= 1e-10 and abs(amb_last_velocity-self.emer.max_speed) <= 1e-10):
+            #since ambulance had maximum speed and speed did not change that much; unless we applied the code below.. the acceleration
+            #   will be wrongly assumed to be zero. Although the ambulance probably could have accelerated more, but this is its maximum velocity.
+                reward = max_step_reward #same reward as maximum acceleration (+2),
+            return reward
 
 
 
 def run():
     step = 0
 
-    LH.chL(0)
-
-    #print("Hello world, I'm an AV, and I love carrots")
+    vehicles_list = [LH, RB]
+    Proudhon = env(vehicles_list)  # [LH, RB]
+    traci.simulationStep()  # apply_action
+    getters(vehicles_list)
+    #LH.chL(0) #No need for this now, automatic lane change is removed. Checkout Vehicle.__init__() : traci.vehicle.setLaneChangeMode(self.ID, 256)
     while traci.simulation.getMinExpectedNumber() > 0:
 
-        traci.simulationStep()
+        amb_last_velocity = Proudhon.emer.spd
 
-        vehicles_list = [LH, RB]
+        traci.simulationStep() #apply_action
+        step += 1
 
         getters(vehicles_list)
 
-
-        Proudhon = env(vehicles_list) #[LH, RB]
         Proudhon.measure_full_state()
         Proudhon.get_feasible_actions(RB)
+        Proudhon.get_feasible_actions(LH)
 
         print(step,' : ','[agent_vel , agent_lane , amb_vel , amb_lane , rel_amb_y]')
         print(step,' :  ',Proudhon.observed_state)
-        step += 1
 
-        """
-        if step ==10:
-            LH.chL(fast)
+        done = Proudhon.are_we_done(full_state=Proudhon.full_state, step_number=step)
 
-            Proudhon = Anarchia(LH,RB)
-            Proudhon.pickAction()
-            Proudhon.takeAction()
-            Proudhon.memory()
+        print("reward: ", Proudhon.calc_reward(amb_last_velocity, done, step) )
 
-        elif step%10==0 and step>10:
+        if(done):
+            if(done == 1):
+                print("We are done here due to PASSING MAX STEPS NUMBER!")
+            elif(done == 2):
+                print("We are done here due to AMBULANCE PASSING THE GOAL!")
+            elif(done == 3): #TODO: #TOFIX: What should be the state here?
+                print("We are done here due to AGENT PASSING THE GOAL!")
+            else:
+                print("We are done here BUT I DON'T KNOW WHY!")
 
-            Proudhon.evaluate()
-            Proudhon.pickAction()
-            Proudhon.takeAction()
-            Proudhon.memory()
-
-
-            #print("time ",getArrivTime(LH,RB))
-        if step%1000==0 and step>=1000:
-            print(step)
-            print("Arrive time ", getArrivTime(LH,RB))
-            print(Q)
-            Q_Table = pd.DataFrame({'Change Lane': Q[:, 0], 'Accelerate': Q[:, 1],'Decelerate': Q[:, 2],'Do no thing': Q[:, 3]})
-
-            Q_Table.to_csv('Results/Q_Table_step='+str(step)+'.csv', index=False)
-        if step ==SimTime:
             break
-        
-
-        """
 
 
 

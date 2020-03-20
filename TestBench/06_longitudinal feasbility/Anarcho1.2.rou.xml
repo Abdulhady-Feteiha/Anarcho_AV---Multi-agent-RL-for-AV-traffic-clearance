@@ -1,7 +1,7 @@
 <routes>
 
-      <vType id="Emergency" length="2.0" maxSpeed="10.0" sigma="0.0" color='1,0,0' depart= "10.0" accel = "2.0" decel = "2.0" emergencyDecel="2.0"/>
-      <vType id="Ego" length="2.0" maxSpeed="5.0" sigma="0.0" color='0,0,1' accel = "1.0" decel = "1.0"  emergencyDecel="1.0" />
+      <vType id="Emergency" length="2.0" maxSpeed="10.0" sigma="0.0" color='1,0,0' depart= "10.0" accel = "2.0" decel = "2.0" emergencyDecel="2.0" minGap = "3.5" carFollowModel= "KraussOrig1"/>
+      <vType id="Ego" length="4.0" maxSpeed="5.0" sigma="0.0" color='0,0,1' accel = "1.0" decel = "1.0"  emergencyDecel="1.0" minGap = "2.5" carFollowModel= "KraussOrig1"/>
 
       <route id="Emer_route" edges="r1 r2"/>
       <route id="Ego_route" edges="r2"/>
@@ -15,3 +15,4 @@
       <!-- r1L for ego only, -->
 
 </routes>
+
