@@ -1,0 +1,2 @@
+1-When tranistioning B to a position A.pose+5 
+ - B was removed from the track to a negative pose. In later steps, it's pose rises up again from -ve as if it's the beginning of the simulation. 
