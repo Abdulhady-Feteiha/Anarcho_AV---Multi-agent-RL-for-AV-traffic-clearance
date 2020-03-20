@@ -134,11 +134,13 @@ def defGlobals():
     LH = Vehicle("LH")
     RB = Vehicle("RB")
     SimTime = 1000
-    #Q = np.zeros((7,4))
-    Q_ = np.zeros((6,3,11,3,58,5))
 
 
-def run():
+
+def measure():
+    traci.start(['sumo', "-c", "Anarcho1.2.sumocfg",
+                             "--tripinfo-output", "tripinfo.xml"])
+    defGlobals()
     step = 0
 
     vehicles_list = [LH, RB]
@@ -164,7 +166,7 @@ def run():
                 traci.close()
                 sys.stdout.flush()
                 os.system("clear")
-                
+
                 print("At setp: ",step-1)
                 print("Vehicle expeienced a decel of: ",decel)
                 print("Due to a min distance of: ",lastStepDist)
@@ -172,14 +174,3 @@ def run():
 
 
         step += 1
-
-
-
-
-
-
-# traci starts sumo as a subprocess and then this script connects and runs
-traci.start(['sumo', "-c", "Anarcho1.2.sumocfg",
-                         "--tripinfo-output", "tripinfo.xml"])
-defGlobals()
-run()

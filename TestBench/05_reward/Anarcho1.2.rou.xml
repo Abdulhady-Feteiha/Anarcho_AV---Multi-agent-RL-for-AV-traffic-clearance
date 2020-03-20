@@ -1,8 +1,7 @@
 <routes>
 
-      <vType id="Emergency" emergencyDecel="0.25" decl="1.0" length="2.0" maxSpeed="5.0" sigma="0.0" color='1,0,0' depart= "1.0"/>
-      <vType id="Ego" length="2.0" maxSpeed="1.0" sigma="0.0" color='0,0,1' />
-
+      <vType id="Ego" length="1.0" maxSpeed="5.0" minGap="1.0" sigma="0.0" color='0,0,1' />
+      <vType id="Emergency" length="1.0" emergencyDecel="2.0" decel="2.0" maxSpeed="10.0" minGap="1.0" sigma="0.0" color='1,0,0' depart= "1.0"/>
       <route id="Emer_route" edges="r1 r2"/>
       <route id="Ego_route" edges="r2"/>
 

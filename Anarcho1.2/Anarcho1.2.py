@@ -6,7 +6,7 @@ from math import sqrt, ceil
 from random import randrange
 import numpy as np
 import warnings; do_warn = False
-
+from measure_min_window import measure
 # we need to import some python modules from the $SUMO_HOME/tools directory
 if 'SUMO_HOME' in os.environ:
     tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
@@ -17,6 +17,8 @@ else:
 
 from sumolib import checkBinary  # Checks for the binary in environ vars
 import traci
+
+min_window = measure()
 
 
 def get_options():
@@ -35,7 +37,7 @@ class Vehicle:
         self.length_of_base_route = 100 #Length of base route
 
         traci.vehicle.setLaneChangeMode(self.ID, 256)
-        '''To disable all autonomous changing but still handle safety checks in the simulation, 
+        '''To disable all autonomous changing but still handle safety checks in the simulation,
         either one of the modes 256 (collision avoidance) or 512 (collision avoidance and safety-gap enforcement) may be used.
         ref: https://sumo.dlr.de/docs/TraCI/Change_Vehicle_State.html#lane_change_mode_0xb6'''
         self.type = traci.vehicle.getTypeID(self.ID)
@@ -429,10 +431,10 @@ class env():
             f"Function env.get_feasible_actions(agent) checks if self.spd+self.max_accel is feasible.")
 
         '''
-        couldChangeLane: Return bool indicating whether the vehicle could change lanes in the specified direction 
+        couldChangeLane: Return bool indicating whether the vehicle could change lanes in the specified direction
         (right: -1, left: 1. sublane-change within current lane: 0).
-        #Check function here https://sumo.dlr.de/docs/TraCI/Vehicle_Value_Retrieval.html 
-        #NOTE: getLaneChangeState return much more details about who blocked, if blocking .. etc. 
+        #Check function here https://sumo.dlr.de/docs/TraCI/Vehicle_Value_Retrieval.html
+        #NOTE: getLaneChangeState return much more details about who blocked, if blocking .. etc.
             #Details: https://sumo.dlr.de/docs/TraCI/Vehicle_Value_Retrieval.html#change_lane_information_0x13
         '''
         if (change_left_possible):
