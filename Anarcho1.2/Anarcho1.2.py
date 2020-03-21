@@ -6,7 +6,7 @@ from math import sqrt, ceil
 from random import randrange
 import numpy as np
 import warnings; do_warn = False
-from measure_min_window import measure
+
 # we need to import some python modules from the $SUMO_HOME/tools directory
 if 'SUMO_HOME' in os.environ:
     tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
@@ -17,8 +17,6 @@ else:
 
 from sumolib import checkBinary  # Checks for the binary in environ vars
 import traci
-
-min_window = measure()
 
 
 def get_options():
@@ -37,7 +35,7 @@ class Vehicle:
         self.length_of_base_route = 100 #Length of base route
 
         traci.vehicle.setLaneChangeMode(self.ID, 256)
-        '''To disable all autonomous changing but still handle safety checks in the simulation,
+        '''To disable all autonomous changing but still handle safety checks in the simulation, 
         either one of the modes 256 (collision avoidance) or 512 (collision avoidance and safety-gap enforcement) may be used.
         ref: https://sumo.dlr.de/docs/TraCI/Change_Vehicle_State.html#lane_change_mode_0xb6'''
         self.type = traci.vehicle.getTypeID(self.ID)
@@ -51,6 +49,15 @@ class Vehicle:
         occurs from setSpeed or slowDown functions.
         '''
         self.spd = traci.vehicle.getSpeed(self.ID)
+
+
+    def getPreviousSpd(self):
+
+        '''Return previous speed to compute reward , it has same code as getSpeed function , I have written it with
+        different name for readability purposes , it is called in the run function before we proceed to next step to get
+        previous speed '''
+
+        self.previous_speed=traci.vehicle.getSpeed(self.ID)
 
     def getRoute(self):
         '''
@@ -97,6 +104,16 @@ class Vehicle:
         '''
         self.lane = traci.vehicle.getLaneIndex(self.ID) #Force lane update right after to avoid lagging in information
 
+    def chRight(self):
+
+
+        lane = traci.vehicle.getLaneIndex(self.ID)
+        traci.vehicle.changeLane(self.ID, lane-1 , SimTime)
+
+    def chLeft(self):
+        lane = traci.vehicle.getLaneIndex(self.ID)
+        traci.vehicle.changeLane(self.ID, (lane) + 1, SimTime)
+
     def acc(self,spd,t):
         '''
         :param spd: speed to reach after time (t)
@@ -130,6 +147,7 @@ def getters(vs):
         v.getPose()
         v.getAcc()
         v.getL()
+        v.getPreviousSpd()
 
 def defGlobals():
     '''
@@ -168,7 +186,7 @@ def defGlobals():
 
 def CalcDist(emer,agent):
     #edit
-    if emer.route>agent.route:
+    if emer.route > agent.route:
         dist = track_len-(emer.pose-agent.pose)
     elif emer.route<agent.route:
         dist = agent.pose-emer.pose
@@ -200,19 +218,30 @@ class RLAlgorithm():
     def pickAction(self):
         self.Action = self.QActions[randrange(len(self.QActions))]
 
-    def takeAction(self):
-        if self.Action=="change_left":
-            self.agent.chL(slow)
-        elif self.Action=="change_right":
-            self.agent.chL(fast)
-        elif self.Action=="acc":
-            self.agent.acc(40,10)
-        elif self.Action=="dec":
-            self.agent.acc(4,10)
-        elif self.Action=="no_acc":
+
+    def applyAction(self,action,agent):
+        '''
+
+        :param action: action chosen by pick Action function
+        :param agent: our lovely RL agent
+        :return: None but it apply action on the agent
+
+        this function has a hard coded in acc , dec function as till know we have used +1,-1 to be only possible values
+         for acc, dec.
+        if it is not the case then :param action will be string with the value of acc and there will be a parasing func to do so
+        '''
+        if action == "change_left":
+            agent.chLeft()
+        elif action == "change_right":
+            agent.chRight()
+        elif action == "acc":
+            agent.inst_acc(1)   # hard coded
+        elif action == "dec":
+            agent.inst_acc(-1)  # hard coded
+        elif action == "no_acc":
             pass
-        else:
-            raise("Error: Action not recognized. ")
+
+        #traci.simulationStep()
 
     # def memory(self):
     #     self.initial_time = getArrivTime(self.emer,self.agent)
@@ -402,7 +431,7 @@ class env():
         leader_id, distance_to_leader = leader_data #distance to leader (in our terms) = gap - leader_length - my_minGap
         leading_vehicle = self.get_vehicle_object_by_id(leader_id)
 
-        follow_speed = traci.vehicle.getFollowSpeed(agent.ID, agent.max_speed, distance_to_leader, leading_vehicle.spd, agent.max_decel, leading_vehicle.ID)
+        follow_speed = traci.vehicle.c(agent.ID, agent.max_speed, distance_to_leader, leading_vehicle.spd, agent.max_decel, leading_vehicle.ID)
 
         return follow_speed
 
@@ -431,10 +460,10 @@ class env():
             f"Function env.get_feasible_actions(agent) checks if self.spd+self.max_accel is feasible.")
 
         '''
-        couldChangeLane: Return bool indicating whether the vehicle could change lanes in the specified direction
+        couldChangeLane: Return bool indicating whether the vehicle could change lanes in the specified direction 
         (right: -1, left: 1. sublane-change within current lane: 0).
-        #Check function here https://sumo.dlr.de/docs/TraCI/Vehicle_Value_Retrieval.html
-        #NOTE: getLaneChangeState return much more details about who blocked, if blocking .. etc.
+        #Check function here https://sumo.dlr.de/docs/TraCI/Vehicle_Value_Retrieval.html 
+        #NOTE: getLaneChangeState return much more details about who blocked, if blocking .. etc. 
             #Details: https://sumo.dlr.de/docs/TraCI/Vehicle_Value_Retrieval.html#change_lane_information_0x13
         '''
         if (change_left_possible):
@@ -458,6 +487,7 @@ class env():
 
         print(f'Feasible actions: ', feasible_actions)
         return feasible_actions
+
 
     def calc_reward(self, amb_last_velocity, done, number_of_steps, max_final_reward = 20, min_final_reward = -20, max_step_reward=0, min_step_reward = -1.25):
         '''
@@ -511,18 +541,27 @@ def run():
     #LH.chL(0) #No need for this now, automatic lane change is removed. Checkout Vehicle.__init__() : traci.vehicle.setLaneChangeMode(self.ID, 256)
     while traci.simulation.getMinExpectedNumber() > 0:
 
-        amb_last_velocity = Proudhon.emer.spd
+        amb_last_velocity = LH.previous_speed  # this line should always be before proceeding to nxt step in simulation
+        # i.e. traci.simulationStep()
 
         traci.simulationStep() #apply_action
-        step += 1
+
+        RL = RLAlgorithm(Proudhon);
+        if step < 2:
+           print ("planning to increase my_speed","agent_vel",RB.spd)
+
+           RL.applyAction("acc", RB) #where apply action happen
+
+
 
         getters(vehicles_list)
 
         Proudhon.measure_full_state()
-        Proudhon.get_feasible_actions(RB)
-        Proudhon.get_feasible_actions(LH)
+        #Proudhon.get_feasible_actions(RB)
+        #Proudhon.get_feasible_actions(LH)
 
         print(step,' : ','[agent_vel , agent_lane , amb_vel , amb_lane , rel_amb_y]')
+        print(step, ' : ', 'previous_vel', amb_last_velocity)
         print(step,' :  ',Proudhon.observed_state)
 
         done = Proudhon.are_we_done(full_state=Proudhon.full_state, step_number=step)
@@ -540,6 +579,8 @@ def run():
                 print("We are done here BUT I DON'T KNOW WHY!")
 
             break
+
+        step += 1
 
 
 
@@ -561,5 +602,5 @@ if __name__ == "__main__":
     traci.start([sumoBinary, "-c", "Anarcho1.2.sumocfg",
                              "--tripinfo-output", "tripinfo.xml"])
     defGlobals()
-    defGlobals()
+    #defGlobals()
     run()
