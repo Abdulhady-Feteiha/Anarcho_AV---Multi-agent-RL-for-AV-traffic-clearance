@@ -6,7 +6,9 @@ from math import sqrt, ceil
 from random import randrange
 import numpy as np
 import warnings; do_warn = False
+
 import random
+
 
 # we need to import some python modules from the $SUMO_HOME/tools directory
 if 'SUMO_HOME' in os.environ:
@@ -50,6 +52,15 @@ class Vehicle:
         occurs from setSpeed or slowDown functions.
         '''
         self.spd = traci.vehicle.getSpeed(self.ID)
+
+
+    def getPreviousSpd(self):
+
+        '''Return previous speed to compute reward , it has same code as getSpeed function , I have written it with
+        different name for readability purposes , it is called in the run function before we proceed to next step to get
+        previous speed '''
+
+        self.previous_speed=traci.vehicle.getSpeed(self.ID)
 
     def getRoute(self):
         '''
@@ -96,6 +107,16 @@ class Vehicle:
         '''
         self.lane = traci.vehicle.getLaneIndex(self.ID) #Force lane update right after to avoid lagging in information
 
+    def chRight(self):
+
+
+        lane = traci.vehicle.getLaneIndex(self.ID)
+        traci.vehicle.changeLane(self.ID, lane-1 , SimTime)
+
+    def chLeft(self):
+        lane = traci.vehicle.getLaneIndex(self.ID)
+        traci.vehicle.changeLane(self.ID, (lane) + 1, SimTime)
+
     def acc(self,spd,t):
         '''
         :param spd: speed to reach after time (t)
@@ -129,6 +150,7 @@ def getters(vs):
         v.getPose()
         v.getAcc()
         v.getL()
+        v.getPreviousSpd()
 
 def defGlobals():
     '''
@@ -166,7 +188,7 @@ def defGlobals():
 
 def CalcDist(emer,agent):
     #edit
-    if emer.route>agent.route:
+    if emer.route > agent.route:
         dist = track_len-(emer.pose-agent.pose)
     elif emer.route<agent.route:
         dist = agent.pose-emer.pose
@@ -210,6 +232,33 @@ class RLAlgorithm():
 
     def pickAction(self):
         self.Action = self.QActions[randrange(len(self.QActions))]
+
+
+
+    def applyAction(self,action,agent):
+        '''
+
+        :param action: action chosen by pick Action function
+        :param agent: our lovely RL agent
+        :return: None but it apply action on the agent
+
+        this function has a hard coded in acc , dec function as till know we have used +1,-1 to be only possible values
+         for acc, dec.
+        if it is not the case then :param action will be string with the value of acc and there will be a parasing func to do so
+        '''
+        if action == "change_left":
+            agent.chLeft()
+        elif action == "change_right":
+            agent.chRight()
+        elif action == "acc":
+            agent.inst_acc(1)   # hard coded
+        elif action == "dec":
+            agent.inst_acc(-1)  # hard coded
+        elif action == "no_acc":
+            pass
+
+        #traci.simulationStep()
+
         '''
         Edit as follows:
         ## First we randomize a number
@@ -289,19 +338,6 @@ class RLAlgorithm():
         self.q_table[agent_vel_index][agent_lane_index][amb_vel_index][amb_lane_index][rel_amb_y_index][action_index] = q_of_s_a_value
 
 
-    # def takeAction(self):
-    #     if self.Action=="change_left":
-    #         self.agent.chL(slow)
-    #     elif self.Action=="change_right":
-    #         self.agent.chL(fast)
-    #     elif self.Action=="acc":
-    #         self.agent.acc(40,10)
-    #     elif self.Action=="dec":
-    #         self.agent.acc(4,10)
-    #     elif self.Action=="no_acc":
-    #         pass
-    #     else:
-    #         raise("Error: Action not recognized. ")
 
     # def memory(self):
     #     self.initial_time = getArrivTime(self.emer,self.agent)
@@ -491,7 +527,7 @@ class env():
         leader_id, distance_to_leader = leader_data #distance to leader (in our terms) = gap - leader_length - my_minGap
         leading_vehicle = self.get_vehicle_object_by_id(leader_id)
 
-        follow_speed = traci.vehicle.getFollowSpeed(agent.ID, agent.max_speed, distance_to_leader, leading_vehicle.spd, agent.max_decel, leading_vehicle.ID)
+        follow_speed = traci.vehicle.c(agent.ID, agent.max_speed, distance_to_leader, leading_vehicle.spd, agent.max_decel, leading_vehicle.ID)
 
         return follow_speed
 
@@ -549,6 +585,7 @@ class env():
 
         #debug#print(f'Feasible actions: ', feasible_actions)
         return feasible_actions
+
 
     def calc_reward(self, amb_last_velocity, done, number_of_steps, max_final_reward = 20, min_final_reward = -20, max_step_reward=0, min_step_reward = -1.25):
         #TODO: Fix reward logic to be this_step -> next_step (as opposed to prev_step -> this_step)
@@ -624,15 +661,28 @@ def run():
 
     while traci.simulation.getMinExpectedNumber() > 0:
 
-        amb_last_velocity = Proudhon.emer.spd
+
+        amb_last_velocity = LH.previous_speed  # this line should always be before proceeding to nxt step in simulation
+        # i.e. traci.simulationStep()
+
+       
         last_observed_state = Proudhon.observed_state #For rewarding purposes
+
 
         exp_exp_tradeoff = random.uniform(0, 1)
         traci.simulationStep() #apply_action
-        step += 1
+
+        RL = RLAlgorithm(Proudhon);
+        if step < 2:
+           print ("planning to increase my_speed","agent_vel",RB.spd)
+
+           RL.applyAction("acc", RB) #where apply action happen
+
+
 
         getters(vehicles_list)
         Proudhon.measure_full_state()
+
 
         feasible_actions_for_chosen_action = Proudhon.get_feasible_actions(RB)
         Proudhon.get_feasible_actions(LH)
@@ -653,6 +703,7 @@ def run():
 
 
         print(step,' : ','[agent_vel , agent_lane , amb_vel , amb_lane , rel_amb_y]')
+        print(step, ' : ', 'previous_vel', amb_last_velocity)
         print(step,' :  ',Proudhon.observed_state)
 
         done = Proudhon.are_we_done(full_state=Proudhon.full_state, step_number=step)
@@ -670,6 +721,8 @@ def run():
                 print("We are done here BUT I DON'T KNOW WHY!")
 
             break
+
+        step += 1
 
 
 
@@ -694,5 +747,5 @@ if __name__ == "__main__":
     traci.start([sumoBinary, "-c", "Anarcho1.2.sumocfg",
                              "--tripinfo-output", "tripinfo.xml"])
     defGlobals()
-    defGlobals()
+    #defGlobals()
     run()
