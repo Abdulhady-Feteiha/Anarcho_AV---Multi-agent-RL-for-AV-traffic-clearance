@@ -1,0 +1,37 @@
+- Download SUMO version after 16/3
+- Make sure that in rou.xml, the Ego vehicle comes first to avoid SUMO problems (refer to test case 03)
+- Reward could be assigned in the same step, by predicting the ambulance's next speed and rewarding for it in the same step
+- Issue Waleed created link: https://github.com/eclipse/sumo/issues/3361
+- Waiting for window by Abdulhadi: Possible things that effect the window: follower minGap, follower speed, leader speed, leader max decel, 
+follower max decel.
+- Assume that 
+	Current_solution: tracke_len + window_size
+	Future_soltuion (mutli-agent): assume ambulance continues the ambulance will continue at max_acceleration, reward accrodingly.:: Task.
+- Acceleration: 1 or any intermediate value ?
+- Waleed: choose max value from feasible actions ONLY.
+
+- If action = accelerate, then new_velocity = vsafe --> to get vsafe, use getFollowSpeed function from inside the agent.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
