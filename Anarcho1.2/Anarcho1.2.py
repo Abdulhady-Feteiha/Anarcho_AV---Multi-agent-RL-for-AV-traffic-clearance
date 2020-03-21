@@ -7,6 +7,9 @@ from random import randrange
 import numpy as np
 import warnings; do_warn = False
 
+import random
+
+
 # we need to import some python modules from the $SUMO_HOME/tools directory
 if 'SUMO_HOME' in os.environ:
     tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
@@ -173,7 +176,7 @@ def defGlobals():
 
     :return:  None. Just defines global variables
     '''
-    global SimTime,LH,RB,track_len,fast,slow,Q,speed_range
+    global SimTime,LH,RB,track_len,fast,slow,speed_range
     speed_range = np.arange(0,30,5)
     fast = 0
     slow = 1
@@ -182,7 +185,6 @@ def defGlobals():
     RB = Vehicle("RB")
     SimTime = 1000
     #Q = np.zeros((7,4))
-    Q_ = np.zeros((6,3,11,3,58,5))
 
 def CalcDist(emer,agent):
     #edit
@@ -204,8 +206,9 @@ class RLAlgorithm():
     Access order for the Q_table is [agent_vel][agent_lane][amb_vel][amb_lane][rel_amb_y][action].. remember to change the value rel_amb_y to be positive [0,58]
     '''
 
-    def __init__(self, environment, name="Q-learning"):
+    def __init__(self, environment, name="Q-learning", algo_params = dict()):
         '''
+        #Usage is: One RLAlgorithm object per training agent
         :param environment:  of class env, contains list of vehicles and observations.
         :param name:         string, currently not used except for display purposes
         '''
@@ -215,8 +218,21 @@ class RLAlgorithm():
         self.QActions = self.environment.Actions
         self.action_to_string_dict = self.environment.action_to_string_dict
 
+
+        #algo_params:
+        if(name == "Q-learning"): #default case for now
+            self.q_table = np.zeros((6, 3, 11, 3, 58, 5))
+            self.exp_exp_tradeoff = algo_params['exp_exp_tradeoff']
+            self.epsilon = algo_params['epsilon']
+            self.gamma = algo_params['gamma']
+            self.learning_rate = algo_params['learning_rate']
+            self.max_epsilon = algo_params['max_epsilon']
+            self.min_epsilon = algo_params['min_epsilon']
+            self.decay_rate = algo_params['decay_rate']
+
     def pickAction(self):
         self.Action = self.QActions[randrange(len(self.QActions))]
+
 
 
     def applyAction(self,action,agent):
@@ -243,28 +259,108 @@ class RLAlgorithm():
 
         #traci.simulationStep()
 
+        '''
+        Edit as follows:
+        ## First we randomize a number
+        exp_exp_tradeoff = random.uniform(0,1)
+        
+        ## If this number > greater than epsilon --> exploitation (taking the biggest Q value for this state)
+        if exp_exp_tradeoff > epsilon:
+            action = np.argmax(qtable[state,:])
+        
+        # Else doing a random choice --> exploration
+        else:
+            action = env.action_space.sample()
+            
+        link: https://github.com/simoninithomas/Deep_reinforcement_learning_Course/blob/master/Q%20learning/Taxi-v2/Q%20Learning%20with%20OpenAI%20Taxi-v2%20video%20version.ipynb
+        '''
+        return self.Action
+
+    def update_q_table(self, chosen_action, reward, new_observed_state_for_this_agent,last_observed_state_for_this_agent, feasible_actions_for_chosen_action,
+                       rel_amb_y_min = -41, rel_amb_y_max = 16):
+        '''
+
+        :param chosen_action:
+        :param observed_state:
+        :return:
+
+        :Notes:
+        #Assumed Hierarchy of observed_state_for_this_agent:[agent_vel , agent_lane , amb_vel , amb_lane , rel_amb_y]
+
+        '''
+
+        #OLD STATE VARIABLES:
+        agent_vel = last_observed_state_for_this_agent[0]
+        agent_vel_index = int(np.round(agent_vel)) #[0,1,2,3,4,5]
+
+        agent_lane_index = last_observed_state_for_this_agent[1]
+
+        amb_vel = last_observed_state_for_this_agent[2]
+        amb_vel_index = int(np.round(amb_vel)) #[0,1,2,3,4,5,6,7,8,9,10]
+
+        amb_lane_index = last_observed_state_for_this_agent[3]
+
+        rel_amb_y = np.clip(last_observed_state_for_this_agent[4], rel_amb_y_min, rel_amb_y_max)  # rel_amb_y  (16+1+41 = 58): [-41,-40,-39,.....,0,...13,14,15,16]
+        rel_amb_y_index = int(np.round(rel_amb_y) + abs(rel_amb_y_min) )
+
+        action_index = self.action_to_string_dict[chosen_action]
+
+
+
+        #NEW STATE VARIABLES:
+        new_agent_vel = new_observed_state_for_this_agent[0]
+        new_agent_vel_index = int(np.round(new_agent_vel))  # [0,1,2,3,4,5]
+
+        new_agent_lane_index = new_observed_state_for_this_agent[1]
+
+        new_amb_vel = new_observed_state_for_this_agent[2]
+        new_amb_vel_index = int(np.round(new_amb_vel))  # [0,1,2,3,4,5,6,7,8,9,10]
+
+        new_amb_lane_index = new_observed_state_for_this_agent[3]
+
+        new_rel_amb_y = np.clip(new_observed_state_for_this_agent[4], rel_amb_y_min,
+                            rel_amb_y_max)  # rel_amb_y  (16+1+41 = 58): [-41,-40,-39,.....,0,...13,14,15,16]
+        new_rel_amb_y_index = int(np.round(new_rel_amb_y) + abs(rel_amb_y_min))
+
+
+        #Feasible Action Indices:
+        feasible_action_indices = []
+        for act in feasible_actions_for_chosen_action:
+            feasible_action_indices.append( self.action_to_string_dict[act] )
+
+
+
+        # Update Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
+        q_of_s_a_value = self.q_table[agent_vel_index][agent_lane_index][amb_vel_index][amb_lane_index][rel_amb_y_index][action_index]
+        max_q_of_s_value_new= np.max(self.q_table[new_agent_vel_index, new_agent_lane_index, new_amb_vel_index, new_amb_lane_index, new_rel_amb_y_index, feasible_action_indices])
+        q_of_s_a_value = q_of_s_a_value + self.learning_rate * (reward + self.gamma * max_q_of_s_value_new - q_of_s_a_value)
+        #actual update step:
+        self.q_table[agent_vel_index][agent_lane_index][amb_vel_index][amb_lane_index][rel_amb_y_index][action_index] = q_of_s_a_value
+
+
+
     # def memory(self):
     #     self.initial_time = getArrivTime(self.emer,self.agent)
 
-    def evaluate(self):
-        ArrivTime = getArrivTime(self.emer,self.agent)
-        if self.emer.lane == self.agent.lane:
-            if ArrivTime<=speed_range[-1]:
-                for i in range(1,len(speed_range)):
-                    if speed_range[i-1]<=ArrivTime<speed_range[i]:
-                        state = i-1
-                if ArrivTime>self.initial_time:
-                    self.reward = 5
-                if ArrivTime<self.initial_time:
-                    self.reward = -5
-                Q[state,self.action_to_string_dict[self.Action]] += self.reward
-                print("state ",state)
-            else:
-                self.reward = 1
-                Q[5,self.action_to_string_dict[self.Action]] += self.reward
-        else:
-            self.reward = -1
-            Q[6,self.action_to_string_dict[self.Action]] += self.reward
+    # def evaluate(self):
+    #     ArrivTime = getArrivTime(self.emer,self.agent)
+    #     if self.emer.lane == self.agent.lane:
+    #         if ArrivTime<=speed_range[-1]:
+    #             for i in range(1,len(speed_range)):
+    #                 if speed_range[i-1]<=ArrivTime<speed_range[i]:
+    #                     state = i-1
+    #             if ArrivTime>self.initial_time:
+    #                 self.reward = 5
+    #             if ArrivTime<self.initial_time:
+    #                 self.reward = -5
+    #             Q[state,self.action_to_string_dict[self.Action]] += self.reward
+    #             print("state ",state)
+    #         else:
+    #             self.reward = 1
+    #             Q[5,self.action_to_string_dict[self.Action]] += self.reward
+    #     else:
+    #         self.reward = -1
+    #         Q[6,self.action_to_string_dict[self.Action]] += self.reward
 
 
 class env():
@@ -451,8 +547,8 @@ class env():
         change_right_possible = traci.vehicle.couldChangeLane(agent.ID, right, state=None)
         decelrate_possible = True  # Always true because of how SUMO depends on the Car Follower model and thus avoids maximum decleration hits.
         # Review TestBench Test Case 06 results for more info.
-        accelerate_possible = min(agent.max_speed, agent.spd + agent.max_accel) <= self.get_follow_speed_by_id(
-            agent.ID)  # NOTE: Checks if maximum acceleration is possible
+        accelerate_possible = min(agent.max_speed, agent.spd + agent.max_accel/2) <= self.get_follow_speed_by_id(
+            agent.ID)  # NOTE: Checks if maximum acceleration/2 is possible
         # Do Nothing should be always feasible since SUMO/Autonomous functionality will not allow vehicles to crash.
 
         if (agent.max_accel > 1.0 and do_warn): warnings.warn(
@@ -467,29 +563,34 @@ class env():
             #Details: https://sumo.dlr.de/docs/TraCI/Vehicle_Value_Retrieval.html#change_lane_information_0x13
         '''
         if (change_left_possible):
-            print(f'Agent {agent.ID} can change lane to LEFT lane.')
+            #debug#print(f'Agent {agent.ID} can change lane to LEFT lane.')
+            pass
         else:
             feasible_actions.remove("change_left")
-            print(f'Agent {agent.ID} //CAN NOT// change lane to LEFT lane.')
+            #debug#print(f'Agent {agent.ID} //CAN NOT// change lane to LEFT lane.')
 
         if (change_right_possible):
-            print(f'Agent {agent.ID} can change lane to RIGHT lane.')
+            #debug#print(f'Agent {agent.ID} can change lane to RIGHT lane.')
+            pass
         else:
             feasible_actions.remove("change_right")
-            print(f'Agent {agent.ID} //CAN NOT// change lane to RIGHT lane.')
+            #debug#print(f'Agent {agent.ID} //CAN NOT// change lane to RIGHT lane.')
 
         if (accelerate_possible):
-            print(f'Agent {agent.ID} can ACCELERATE.. next expected velocity = {self.get_follow_speed_by_id(agent.ID)}')
+            #debug#print(f'Agent {agent.ID} can ACCELERATE.. next expected velocity = {self.get_follow_speed_by_id(agent.ID)}')
+            pass
         else:
             feasible_actions.remove("acc")
-            print(
-                f'Agent {agent.ID} can NOT ACCELERATE.. next expected velocity = {self.get_follow_speed_by_id(agent.ID)}')
+            #debug#print(f'Agent {agent.ID} can NOT ACCELERATE.. next expected velocity = {self.get_follow_speed_by_id(agent.ID)}')
 
-        print(f'Feasible actions: ', feasible_actions)
+        #debug#print(f'Feasible actions: ', feasible_actions)
         return feasible_actions
 
 
     def calc_reward(self, amb_last_velocity, done, number_of_steps, max_final_reward = 20, min_final_reward = -20, max_step_reward=0, min_step_reward = -1.25):
+        #TODO: Fix reward logic to be this_step -> next_step (as opposed to prev_step -> this_step)
+        #TODO: Fix final reward logic according last discussiion : if agent finishes first, assume the ambulance  will conitnue at its current
+        #   velocity till the end.
         '''
         :logic: Calculate reward to agent from current state
         :param amb_last_velocity: float, previous velocity the ambulance (self.emer) had
@@ -521,7 +622,7 @@ class env():
             #2 * self.emer.max_accel since: = self.emer.max_accel - * self.emer.max_decel
             c = max_step_reward - self.emer.max_accel * m  # c is y-intercept for the reward function equation #max_step_reward is the y for x = 2 (max acceleration)
             reward = m * (self.emer.spd - amb_last_velocity) + c
-            print(f'c: {c}, m: {m}, accel: {(self.emer.spd - amb_last_velocity)}')
+            #debug#print(f'c: {c}, m: {m}, accel: {(self.emer.spd - amb_last_velocity)}')
 
             if (abs(self.emer.spd - amb_last_velocity) <= 1e-10 and abs(amb_last_velocity-self.emer.max_speed) <= 1e-10):
             #since ambulance had maximum speed and speed did not change that much; unless we applied the code below.. the acceleration
@@ -533,17 +634,42 @@ class env():
 
 def run():
     step = 0
+    episode = 1 #TODO: Repeat over many episodes
+    done = False
+
+
+    q_learning_params = dict()
+    q_learning_params['exp_exp_tradeoff'] = random.uniform(0, 1)
+    q_learning_params['learning_rate'] = 0.7 # Learning rate
+    q_learning_params['gamma'] = 0.618 # Discounting rate
+    # Exploration parameters
+    q_learning_params['epsilon'] = 1.0  # Exploration rate
+    q_learning_params['max_epsilon'] = 1.0  # Exploration probability at start
+    q_learning_params['min_epsilon'] = 0.01  # Minimum exploration probability
+    q_learning_params['decay_rate'] = 0.01  # Exponential decay rate for exploration prob
+
+
+
 
     vehicles_list = [LH, RB]
     Proudhon = env(vehicles_list)  # [LH, RB]
+    RB_RLAlgorithm = RLAlgorithm(Proudhon, algo_params= q_learning_params)
+
     traci.simulationStep()  # apply_action
     getters(vehicles_list)
-    #LH.chL(0) #No need for this now, automatic lane change is removed. Checkout Vehicle.__init__() : traci.vehicle.setLaneChangeMode(self.ID, 256)
+    Proudhon.measure_full_state()
+
     while traci.simulation.getMinExpectedNumber() > 0:
+
 
         amb_last_velocity = LH.previous_speed  # this line should always be before proceeding to nxt step in simulation
         # i.e. traci.simulationStep()
 
+       
+        last_observed_state = Proudhon.observed_state #For rewarding purposes
+
+
+        exp_exp_tradeoff = random.uniform(0, 1)
         traci.simulationStep() #apply_action
 
         RL = RLAlgorithm(Proudhon);
@@ -555,10 +681,26 @@ def run():
 
 
         getters(vehicles_list)
-
         Proudhon.measure_full_state()
-        #Proudhon.get_feasible_actions(RB)
-        #Proudhon.get_feasible_actions(LH)
+
+
+        feasible_actions_for_chosen_action = Proudhon.get_feasible_actions(RB)
+        Proudhon.get_feasible_actions(LH)
+
+        chosen_action = RB_RLAlgorithm.pickAction()
+        reward = Proudhon.calc_reward(amb_last_velocity, done, step)
+        new_observed_state_for_this_agent = Proudhon.observed_state[0]
+        last_observed_state_for_this_agent = last_observed_state[0]
+
+        RB_RLAlgorithm.exp_exp_tradeoff = exp_exp_tradeoff
+
+        RB_RLAlgorithm.update_q_table(chosen_action, reward, new_observed_state_for_this_agent,last_observed_state_for_this_agent, feasible_actions_for_chosen_action,
+                       rel_amb_y_min = -41, rel_amb_y_max = 16)
+
+        RB_RLAlgorithm.epsilon = RB_RLAlgorithm.min_epsilon + (RB_RLAlgorithm.max_epsilon - RB_RLAlgorithm.min_epsilon) * \
+                                 np.exp(-RB_RLAlgorithm.decay_rate * episode)
+
+
 
         print(step,' : ','[agent_vel , agent_lane , amb_vel , amb_lane , rel_amb_y]')
         print(step, ' : ', 'previous_vel', amb_last_velocity)
@@ -592,7 +734,10 @@ def run():
 if __name__ == "__main__":
     options = get_options()
 
+
+    #no-gui is default now:
     # check binary
+    #sumoBinary = checkBinary('sumo') #Uncomment this to have headless mode on
     if options.nogui:
         sumoBinary = checkBinary('sumo')
     else:

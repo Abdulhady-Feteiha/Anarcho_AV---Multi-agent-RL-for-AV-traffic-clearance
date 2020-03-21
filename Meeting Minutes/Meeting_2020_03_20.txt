@@ -1,0 +1,11 @@
+- Abdulhady: Window Function done-- window_size = 30. 
+- Meeting with Dr. Shennawy: 
+ * We need to summarize our work: Summarize in points :: Task (Waleed)
+ * Decide on a time for the meeting: Sunday (anytime) :: Task (Alaa)
+ * (Divide code and review training process) :: Task (Abdulhady)
+
+
+Update Q-table
+Generate Scenarios
+Analysis
+
