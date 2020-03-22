@@ -5,7 +5,7 @@ BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 Sumocfg_DIR = os.path.join(BASE_PATH, "Sumo_files/Anarcho1.3.sumocfg")
 
 
-global SimTime,LH,RB,track_len,fast,slow,Q,speed_range
+global SimTime,LH,RB,track_len,fast,slow,speed_range
 
 
 speed_range = np.arange(0,30,5)
@@ -20,4 +20,3 @@ from Utils.Vehicle import Vehicle
 LH = Vehicle("LH")
 RB = Vehicle("RB")
 vehicles_list = [LH, RB]
-Q_ = np.zeros((6,3,11,3,58,5))
