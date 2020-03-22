@@ -206,7 +206,7 @@ class RLAlgorithm():
     Access order for the Q_table is [agent_vel][agent_lane][amb_vel][amb_lane][rel_amb_y][action].. remember to change the value rel_amb_y to be positive [0,58]
     '''
 
-    def __init__(self, environment, name="Q-learning", algo_params = dict()):
+    def __init__(self, environment, name="Q-learning", algo_params=dict()):
         '''
         #Usage is: One RLAlgorithm object per training agent
         :param environment:  of class env, contains list of vehicles and observations.
@@ -274,7 +274,7 @@ class RLAlgorithm():
             
         link: https://github.com/simoninithomas/Deep_reinforcement_learning_Course/blob/master/Q%20learning/Taxi-v2/Q%20Learning%20with%20OpenAI%20Taxi-v2%20video%20version.ipynb
         '''
-        return self.Action
+
 
     def update_q_table(self, chosen_action, reward, new_observed_state_for_this_agent,last_observed_state_for_this_agent, feasible_actions_for_chosen_action,
                        rel_amb_y_min = -41, rel_amb_y_max = 16):
@@ -672,11 +672,11 @@ def run():
         exp_exp_tradeoff = random.uniform(0, 1)
         traci.simulationStep() #apply_action
 
-        RL = RLAlgorithm(Proudhon);
+
         if step < 2:
            print ("planning to increase my_speed","agent_vel",RB.spd)
 
-           RL.applyAction("acc", RB) #where apply action happen
+           RB_RLAlgorithm.applyAction("acc", RB) #where apply action happen
 
 
 
