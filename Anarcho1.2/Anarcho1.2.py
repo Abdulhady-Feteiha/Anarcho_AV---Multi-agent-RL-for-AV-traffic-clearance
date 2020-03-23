@@ -273,12 +273,8 @@ class RLAlgorithm():
            #self.Action=self.QActions[randrange(len(self.QActions))]
         else:
 
-            max_value_index = np.argmax(self.q_table[
-                                            new_agent_vel_index, new_agent_lane_index, new_amb_vel_index, new_amb_lane_index, new_rel_amb_y_index, feasible_action_indices])
 
-            print("For this state, Iam the max index : ", max_value_index)
-
-            action_index = feasible_action_indices[max_value_index]
+            action_index = random.choice(feasible_action_indices)
 
 
             desired_action_string = self.QActions[action_index]
@@ -760,6 +756,7 @@ def run():
         Proudhon.get_feasible_actions(LH)
 
         chosen_action = RB_RLAlgorithm.pickAction(feasible_actions_for_chosen_action, Proudhon.observed_state[0])
+        RB_RLAlgorithm.applyAction(chosen_action,RB )
         reward = Proudhon.calc_reward(amb_last_velocity, done, step)
         new_observed_state_for_this_agent = Proudhon.observed_state[0] #ques
         last_observed_state_for_this_agent = last_observed_state[0]    # ques
