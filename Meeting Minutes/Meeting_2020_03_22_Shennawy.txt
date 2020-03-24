@@ -1,0 +1,39 @@
+- Next Step:
+	: Scenario Generation to find problems !
+	: Coordination Between Agents (% of coordinating vehicles-> 0%, 20%, 40%..etc):
+		* Same accelerations/velocities:-> Ambulance does not change its driving way
+			in all experiments ! (smart vs non-smart)
+- Start with base case that I can implement -> To more complex cases
+- Scenario generation: lane beside me is slow due to truck
+
+::: Single Agent Scenarios vs Multiagent as next step :::
+Move from problem or move for surveying ?
+Survey for scenario generation ?
+
+- Abdulhady to send link to Dr
+
+
+- Scenario generation :: Waleed
+- Hay2afel elcode :: Abdulhady
+- Mutliagent Survey
+- Scenario Generation Survey
+
+- Analysis :: Alaa + Waleed
+
+
+Monday:
+- are_we_ok ?
+- pick action, apply action (edit)
+- Code review (Video + Structure)
+
+
+
+
+
+
+
+
+
+
+
+
