@@ -1,13 +1,14 @@
-#!/usr/bin/env python
 import os
 import sys
-import optparse
 from math import sqrt, ceil
 from random import randrange
 import numpy as np
 import pandas as pd
+from sumolib import checkBinary  # Checks for the binary in environ vars
+import traci
 from Config import Sumocfg_DIR,SimTime,vehicles_list
 from Utils.Vehicle import Vehicle
+from Utils.helpers import getters
 # we need to import some python modules from the $SUMO_HOME/tools directory
 if 'SUMO_HOME' in os.environ:
     tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
@@ -15,44 +16,6 @@ if 'SUMO_HOME' in os.environ:
 else:
     sys.exit("please declare environment variable 'SUMO_HOME'")
 
-
-from sumolib import checkBinary  # Checks for the binary in environ vars
-import traci
-
-
-
-def get_options():
-    opt_parser = optparse.OptionParser()
-    opt_parser.add_option("--nogui", action="store_true",
-                         default=False, help="run the commandline version of sumo")
-    options, args = opt_parser.parse_args()
-    return options
-
-
-#---------------------------------------------------------#
-
-
-
-
-#---------------------------------------------------------#
-
-def getters(vs):
-    for v in vs:
-        v.getSpd()
-        v.getRoute() #Note: getRoute must always be called before getPose
-        v.getPose()
-        v.getAcc()
-        v.getL()
-
-def defGlobals():
-    '''
-    global SimTime,LH,RB,track_len,fast,slow,Q,speed_range
-    speed_range = np.arange(0,30,5)
-    fast = 0
-    slow = 1
-    track_len = 4000
-    SimTime = 1000
-    '''
 
 
 
@@ -62,7 +25,6 @@ def measure():
     traci.start(['sumo', "-c", Sumocfg_DIR])
     for vehc in vehicles_list:
         vehc.initialize()
-    defGlobals()
     step = 0
 
 

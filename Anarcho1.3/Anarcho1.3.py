@@ -2,17 +2,16 @@
 import os
 import sys
 import optparse
-from math import sqrt, ceil
-from random import randrange
 import numpy as np
-
+from sumolib import checkBinary
+import traci
 from Utils.measure_max_window import measure
 from Config import *
 from Utils.Vehicle import Vehicle
 from Utils.helpers import *
 from RL.SingleAgent import RLAlgorithm
 from Environment.env import env
-# we need to import some python modules from the $SUMO_HOME/tools directory
+
 if 'SUMO_HOME' in os.environ:
     tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
     sys.path.append(tools)
@@ -20,20 +19,12 @@ else:
     sys.exit("please declare environment variable 'SUMO_HOME'")
 
 
-from sumolib import checkBinary  # Checks for the binary in environ vars
-import traci
-
-
-
-
-
-
-#---------------------------------------------------------#
-
-
-
-
-#---------------------------------------------------------#
+def get_options():
+    opt_parser = optparse.OptionParser()
+    opt_parser.add_option("--GUI", action="store_true",
+                         default=False, help="run the GUI version of sumo")
+    options, args = opt_parser.parse_args()
+    return options
 
 
 def defGlobals():
@@ -111,17 +102,20 @@ def run():
     traci.close()
     sys.stdout.flush()
 
+if __name__ == "__main__":
 
-# main entry point
-min_window = measure()
 
-if GUI_on:
-    sumoBinary = checkBinary('sumo-gui')
-else:
-    sumoBinary = checkBinary('sumo')
+    max_window = measure()
 
-traci.start([sumoBinary, "-c", Sumocfg_DIR,
-                         "--tripinfo-output", "tripinfo.xml"])
-for vehc in vehicles_list:
-    vehc.initialize()
-run()
+    options = get_options()
+
+    if options.GUI:
+        sumoBinary = checkBinary('sumo-gui')
+    else:
+        sumoBinary = checkBinary('sumo')
+
+    traci.start([sumoBinary, "-c", Sumocfg_DIR,
+                             "--tripinfo-output", "tripinfo.xml"])
+    for vehc in vehicles_list:
+        vehc.initialize()
+    run()
