@@ -16,7 +16,7 @@ else:
     sys.exit("please declare environment variable 'SUMO_HOME'")
 
 
-from sumolib import checkBinary  # Checks for the binary in environ vars
+from sumolib import checkBinary  # Checks for the   binary in environ vars
 import traci
 
 
@@ -554,6 +554,7 @@ class env():
         #TODO: Fix reward logic to be this_step -> next_step (as opposed to prev_step -> this_step)
         #TODO: Fix final reward logic according last discussiion : if agent finishes first, assume the ambulance  will conitnue at its current
         #   velocity till the end.
+        #TODO: Test for Logic when agent and ambulance lanes are different.
         '''
         :logic: Calculate reward to agent from current state
         :param amb_last_velocity: float, previous velocity the ambulance (self.emer) had
