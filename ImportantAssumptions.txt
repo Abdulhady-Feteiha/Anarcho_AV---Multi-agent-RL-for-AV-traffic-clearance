@@ -1,1 +1,2 @@
 - getPose function inside Vehicle Class assumes that lanes are horizontal (it takes the x-component of the distance function)
+- The network design has total distance of 511 = 500+11 = 500 + 10 +1 = emergency_goal + emergency_max_speed + 1 --> Make sure to edit accordingly.

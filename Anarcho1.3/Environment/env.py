@@ -141,7 +141,7 @@ class env():
             return 1
         #2: goal reached
         elif(amb_abs_y > self.amb_goal_dist - self.emer.max_speed-1 ):
-            # TODO: Change NET file to have total distance = 511. Then we can have the condition to compare with 500 directly.
+            # DONE: Change NET file to have total distance = 511. Then we can have the condition to compare with 500 directly.
             return 2 #GOAL IS NOW 500-10-1 = 489 cells ahead. To avoid ambulance car eacaping
 
         for agent_index in range( self.count_ego_vehicles ):

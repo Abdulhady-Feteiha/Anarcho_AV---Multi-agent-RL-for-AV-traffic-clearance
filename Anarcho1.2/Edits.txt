@@ -4,3 +4,7 @@
 #Reproducability test: Are same actions picked when running twice? (review random seed)
 #Review Q-learning algorithms is similar to the one on the website.
 #REview: Reward for different cases (different lanes, different final states: final reward seemed to be faulty earlier)
+
+#TODO: if agent crosses by max_window: then assume car completed all the way as such (running getFollowSpeed several times)
+  -- Our SingleAgentCase of this is to just let the simulation run and apply the final reward if the agent leaves first because the
+	ambulance would be directly behind the agent.
