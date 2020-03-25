@@ -753,31 +753,30 @@ def run():
         traci.simulationStep() #apply_action
 
 
-        if step < 2:
-           print ("planning to increase my_speed","agent_vel",RB.spd)
-
-           RB_RLAlgorithm.applyAction("acc", RB) #where apply action happen
-
-
-
         getters(vehicles_list)
         Proudhon.measure_full_state()
+        new_observed_state_for_this_agent = Proudhon.observed_state[0]
+        last_observed_state_for_this_agent = last_observed_state[0]
+        done = Proudhon.are_we_done(full_state=Proudhon.full_state, step_number=step)
 
 
-        feasible_actions_for_chosen_action = Proudhon.get_feasible_actions(RB)
-        Proudhon.get_feasible_actions(LH)
+        feasible_actions_for_chosen_action = Proudhon.get_feasible_actions(RB) #TODO: var_name_change ACTUALLY: feasible_actions_for_current_state
+        #Proudhon.get_feasible_actions(LH)
 
         chosen_action = RB_RLAlgorithm.pickAction(feasible_actions_for_chosen_action, Proudhon.observed_state[0])
-        RB_RLAlgorithm.applyAction(chosen_action,RB )
+
         reward = Proudhon.calc_reward(amb_last_velocity, done, step)
-        new_observed_state_for_this_agent = Proudhon.observed_state[0] #ques
-        last_observed_state_for_this_agent = last_observed_state[0]    # ques
+
+        RB_RLAlgorithm.update_q_table(chosen_action, reward, new_observed_state_for_this_agent,
+                                      last_observed_state_for_this_agent, feasible_actions_for_chosen_action,
+                                      rel_amb_y_min=-41, rel_amb_y_max=16)
+
+        RB_RLAlgorithm.applyAction(chosen_action, RB)
 
         #RB_RLAlgorithm.exp_exp_tradeoff = exp_exp_tradeoff
 
-        RB_RLAlgorithm.update_q_table(chosen_action, reward, new_observed_state_for_this_agent,last_observed_state_for_this_agent, feasible_actions_for_chosen_action,
-                       rel_amb_y_min = -41, rel_amb_y_max = 16)
 
+        #TODO: EPSILON MUST BE UPDATED OUTSIDE THE LOOP
         RB_RLAlgorithm.epsilon = RB_RLAlgorithm.min_epsilon + (RB_RLAlgorithm.max_epsilon - RB_RLAlgorithm.min_epsilon) * \
                                  np.exp(-RB_RLAlgorithm.decay_rate * episode) #TODO: Change epsilone to update every episode not every iteration
 
@@ -790,7 +789,7 @@ def run():
 
 
 
-        done = Proudhon.are_we_done(full_state=Proudhon.full_state, step_number=step)
+
 
         print("reward: ", Proudhon.calc_reward(amb_last_velocity, done, step) )
 
