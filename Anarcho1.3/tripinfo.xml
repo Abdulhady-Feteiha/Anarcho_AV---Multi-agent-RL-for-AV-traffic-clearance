@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Tue Mar 24 21:05:30 2020 by Eclipse SUMO Version 1.5.0
+<!-- generated on 03/25/20 22:08:46 by Eclipse SUMO Version v1_5_0+0742-a5dc31a60d
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
-        <net-file value="/Users/Abdulhady/Desktop/GP/Anarcho_AV/Anarcho_AV&#45;&#45;-Multi-agent-RL-for-AV-traffic-clearance/Anarcho1.3/Sumo_files/Anarcho1.3.net.xml"/>
-        <route-files value="/Users/Abdulhady/Desktop/GP/Anarcho_AV/Anarcho_AV&#45;&#45;-Multi-agent-RL-for-AV-traffic-clearance/Anarcho1.3/Sumo_files/Anarcho1.3.rou.xml"/>
+        <net-file value="D:\Career\GP\RLRep\Anarcho1.3\Sumo_files/Anarcho1.3.net.xml"/>
+        <route-files value="D:\Career\GP\RLRep\Anarcho1.3\Sumo_files/Anarcho1.3.rou.xml"/>
     </input>
 
     <output>
@@ -18,7 +18,7 @@
     </time>
 
     <traci_server>
-        <remote-port value="60592"/>
+        <remote-port value="26979"/>
     </traci_server>
 
 </configuration>

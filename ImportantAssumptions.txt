@@ -1,0 +1,1 @@
+- getPose function inside Vehicle Class assumes that lanes are horizontal (it takes the x-component of the distance function)

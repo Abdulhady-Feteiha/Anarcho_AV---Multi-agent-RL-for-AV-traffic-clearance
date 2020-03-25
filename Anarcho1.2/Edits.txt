@@ -1,0 +1,6 @@
+1- exp_exp_tradeoff should not be assigned inside the code of def run, but rather inside the code of: only one line in run and
+2- Change epsilon to update every episode not every iteration ! IMPORTANT !!!
+
+#Reproducability test: Are same actions picked when running twice? (review random seed)
+#Review Q-learning algorithms is similar to the one on the website.
+#REview: Reward for different cases (different lanes, different final states: final reward seemed to be faulty earlier)

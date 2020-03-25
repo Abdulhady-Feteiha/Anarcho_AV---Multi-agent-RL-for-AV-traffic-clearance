@@ -4,6 +4,9 @@ import traci
 import warnings; do_warn = False          
 class env():
 
+    #TODO: Add env.reset(): ||:Changes .rou file to start: from different lane. ||:Changes network file to start from: different distance.
+
+
     def __init__(self, list_of_vehicles, name="SingleAgentEvn0.1",  ambulance_goal_distance=500):
 
         self.name = name

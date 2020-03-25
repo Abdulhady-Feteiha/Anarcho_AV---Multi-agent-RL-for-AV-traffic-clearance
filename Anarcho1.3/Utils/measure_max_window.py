@@ -46,11 +46,18 @@ def measure():
             if decel<0:
                 traci.close()
                 sys.stdout.flush()
-                os.system("clear")
 
                 print("At setp: ",step-1)
                 print("Vehicle expeienced a decel of: ",decel)
+
+                if (os.name == 'nt'):
+                    os.system('cls')
+                else:
+                    os.system("clear")
+
                 print("Due to a min distance of: ",lastStepDist)
+
+
                 return lastStepDist
 
 

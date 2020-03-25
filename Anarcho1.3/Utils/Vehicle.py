@@ -33,14 +33,19 @@ class Vehicle:
             #print("Warning,current route status: "+traci.vehicle.getRoadID(self.ID) )
 
     def getPose(self): #ROS
-        #TODO: Change this function to depend on  getDistanceRoad(self, edgeID1, pos1, edgeID2, pos2, isDriving=False)
+        #DONE: Change this function to depend on  traci.vehicle.getPosition
         '''
         :return: return the position of the vehicle's front tip in the lane (lane: 0,1 currently).
         Accounts for different routes.
         '''
-        self.lane_pose = traci.vehicle.getLanePosition(self.ID)
-        if(self.route > self.base_route):
-            self.lane_pose +=  self.length_of_base_route
+
+        #OLD
+        # self.lane_pose = traci.vehicle.getLanePosition(self.ID)
+        # if(self.route > self.base_route):
+        #     self.lane_pose +=  self.length_of_base_route
+        self.lane_pose = traci.vehicle.getPosition(self.ID)[0]
+        #debug#print(f'Compare {self.lane_pose}, {traci.vehicle.getPosition(self.ID)}') #found to be equal
+        return self.lane_pose
 
     def getAcc(self): #ROS
         '''
