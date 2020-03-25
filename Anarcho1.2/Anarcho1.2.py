@@ -439,12 +439,13 @@ class RLAlgorithm():
 
 class env():
 
-    #TODO: Add function to print environment state at a certain instant (toString) function
+    #DONE: Add function to print environment state at a certain instant (toString) function
     def __init__(self, list_of_vehicles, name="SingleAgentEvn0.1",  ambulance_goal_distance=500):
 
         self.name = name
         self.list_of_vehicles = list_of_vehicles
         self.amb_goal_dist = ambulance_goal_distance
+        self.reward = 0.0
 
         self.agents = [] #Stays as is in multiagent
         self.emer = None #Stays as is in multiagent
@@ -661,7 +662,6 @@ class env():
         #debug#print(f'Feasible actions: ', feasible_actions)
         return feasible_actions
 
-
     def calc_reward(self, amb_last_velocity, done, number_of_steps, max_final_reward = 20, min_final_reward = -20, max_step_reward=0, min_step_reward = -1.25):
         #TODO: Fix reward logic to be this_step -> next_step (as opposed to prev_step -> this_step)
         #TODO: Fix final reward logic according last discussiion : if agent finishes first, assume the ambulance  will conitnue at its current
@@ -688,6 +688,7 @@ class env():
             c = max_final_reward - 1*m #c is y-intercept for the reward function equation #max_final_reward is the y for x = 1
             reward = m * (self.optimal_time/number_of_steps) + c
             #debug#print(f'c: {c}, m: {m}, steps: {number_of_steps}, optimal_time: {self.optimal_time}')
+            self.reward = reward
             return reward
 
         else: #Calcualate a step reward
@@ -703,8 +704,12 @@ class env():
             #since ambulance had maximum speed and speed did not change that much; unless we applied the code below.. the acceleration
             #   will be wrongly assumed to be zero. Although the ambulance probably could have accelerated more, but this is its maximum velocity.
                 reward = max_step_reward #same reward as maximum acceleration (+2),
+
+            self.reward = reward
             return reward
 
+    def __str__(self): #:return: environment string representation
+        return str( {"name": self.name, "reward": self.reward, "Vehicles": [vhc.ID for vhc in self.list_of_vehicles], "full_state": self.full_state} )
 
 
 def run():
