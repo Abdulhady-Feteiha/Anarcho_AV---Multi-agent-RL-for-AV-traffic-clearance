@@ -53,6 +53,7 @@ class Vehicle:
         '''
         self.spd = traci.vehicle.getSpeed(self.ID)
 
+
     def getPreviousSpd(self):
 
         '''Return previous speed to compute reward , it has same code as getSpeed function , I have written it with
@@ -72,20 +73,14 @@ class Vehicle:
             #print("Warning,current route status: "+traci.vehicle.getRoadID(self.ID) )
 
     def getPose(self): #ROS
-        #DONE: Change this function to depend on  traci.vehicle.getPosition
+        #TODO: Change this function to depend on  getDistanceRoad(self, edgeID1, pos1, edgeID2, pos2, isDriving=False)
         '''
         :return: return the position of the vehicle's front tip in the lane (lane: 0,1 currently).
         Accounts for different routes.
         '''
-
-        #OLD
-        # self.lane_pose = traci.vehicle.getLanePosition(self.ID)
-        # if(self.route > self.base_route):
-        #     self.lane_pose +=  self.length_of_base_route
-        self.lane_pose = traci.vehicle.getPosition(self.ID)[0]
-        #debug#print(f'Compare {self.lane_pose}, {traci.vehicle.getPosition(self.ID)}') #found to be equal
-        return self.lane_pose
-
+        self.lane_pose = traci.vehicle.getLanePosition(self.ID)
+        if(self.route > self.base_route):
+            self.lane_pose +=  self.length_of_base_route
 
     def getAcc(self): #ROS
         '''
@@ -113,6 +108,8 @@ class Vehicle:
         self.lane = traci.vehicle.getLaneIndex(self.ID) #Force lane update right after to avoid lagging in information
 
     def chRight(self):
+
+
         lane = traci.vehicle.getLaneIndex(self.ID)
         traci.vehicle.changeLane(self.ID, lane-1 , SimTime)
 
@@ -186,7 +183,7 @@ def defGlobals():
     track_len = 500
     LH = Vehicle("LH")
     RB = Vehicle("RB")
-    SimTime = 1000.0
+    SimTime = 1000
     #Q = np.zeros((7,4))
 
 def CalcDist(emer,agent):
@@ -259,22 +256,6 @@ class RLAlgorithm():
                             rel_amb_y_max)  # rel_amb_y  (16+1+41 = 58): [-41,-40,-39,.....,0,...13,14,15,16]
         new_rel_amb_y_index = int(np.round(new_rel_amb_y) + abs(rel_amb_y_min))
 
-        '''
-        Previous comment by Waleed:
-        ## First we randomize a number
-        exp_exp_tradeoff = random.uniform(0,1)
-
-        ## If this number > greater than epsilon --> exploitation (taking the biggest Q value for this state)
-        if exp_exp_tradeoff > epsilon:
-            action = np.argmax(qtable[state,:])
-
-        # Else doing a random choice --> exploration
-        else:
-            action = env.action_space.sample()
-
-        link: https://github.com/simoninithomas/Deep_reinforcement_learning_Course/blob/master/Q%20learning/Taxi-v2/Q%20Learning%20with%20OpenAI%20Taxi-v2%20video%20version.ipynb
-        '''
-
 
         #self.Action = self.QActions[randrange(len(self.QActions))]
         if self.exp_exp_tradeoff > self.epsilon:
@@ -292,8 +273,12 @@ class RLAlgorithm():
            #self.Action=self.QActions[randrange(len(self.QActions))]
         else:
 
+            max_value_index = np.argmax(self.q_table[
+                                            new_agent_vel_index, new_agent_lane_index, new_amb_vel_index, new_amb_lane_index, new_rel_amb_y_index, feasible_action_indices])
 
-            action_index = random.choice(feasible_action_indices)
+            print("For this state, Iam the max index : ", max_value_index)
+
+            action_index = feasible_action_indices[max_value_index]
 
 
             desired_action_string = self.QActions[action_index]
@@ -339,7 +324,6 @@ class RLAlgorithm():
             agent.chRight()
         elif action == "acc":
             agent.inst_acc(1)   # hard coded
-            # NOTE: This will ask the agent to seek the maximum safe velocity closest to current_velocity + 1. Take care during ROS implementation.
         elif action == "dec":
             agent.inst_acc(-1)  # hard coded
         elif action == "no_acc":
@@ -347,7 +331,21 @@ class RLAlgorithm():
 
         #traci.simulationStep()
 
-
+        '''
+        Edit as follows:
+        ## First we randomize a number
+        exp_exp_tradeoff = random.uniform(0,1)
+        
+        ## If this number > greater than epsilon --> exploitation (taking the biggest Q value for this state)
+        if exp_exp_tradeoff > epsilon:
+            action = np.argmax(qtable[state,:])
+        
+        # Else doing a random choice --> exploration
+        else:
+            action = env.action_space.sample()
+            
+        link: https://github.com/simoninithomas/Deep_reinforcement_learning_Course/blob/master/Q%20learning/Taxi-v2/Q%20Learning%20with%20OpenAI%20Taxi-v2%20video%20version.ipynb
+        '''
 
 
     def update_q_table(self, chosen_action, reward, new_observed_state_for_this_agent,last_observed_state_for_this_agent, feasible_actions_for_chosen_action,
@@ -439,7 +437,6 @@ class RLAlgorithm():
 
 class env():
 
-    #TODO: Add function to print environment state at a certain instant (toString) function
     def __init__(self, list_of_vehicles, name="SingleAgentEvn0.1",  ambulance_goal_distance=500):
 
         self.name = name
@@ -714,7 +711,7 @@ def run():
 
 
     q_learning_params = dict()
-    q_learning_params['exp_exp_tradeoff'] = random.uniform(0, 1) #TODO: Add random seed to enable replication. #Only keep the exp_exp_tradeoff here.
+    q_learning_params['exp_exp_tradeoff'] = random.uniform(0, 1)
     q_learning_params['learning_rate'] = 0.7 # Learning rate
     q_learning_params['gamma'] = 0.618 # Discounting rate
     # Exploration parameters
@@ -744,7 +741,7 @@ def run():
         last_observed_state = Proudhon.observed_state #For rewarding purposes
 
 
-        #exp_exp_tradeoff = random.uniform(0, 1)
+        exp_exp_tradeoff = random.uniform(0, 1)
         traci.simulationStep() #apply_action
 
 
@@ -763,26 +760,23 @@ def run():
         Proudhon.get_feasible_actions(LH)
 
         chosen_action = RB_RLAlgorithm.pickAction(feasible_actions_for_chosen_action, Proudhon.observed_state[0])
-        RB_RLAlgorithm.applyAction(chosen_action,RB )
         reward = Proudhon.calc_reward(amb_last_velocity, done, step)
         new_observed_state_for_this_agent = Proudhon.observed_state[0] #ques
         last_observed_state_for_this_agent = last_observed_state[0]    # ques
 
-        #RB_RLAlgorithm.exp_exp_tradeoff = exp_exp_tradeoff
+        RB_RLAlgorithm.exp_exp_tradeoff = exp_exp_tradeoff
 
         RB_RLAlgorithm.update_q_table(chosen_action, reward, new_observed_state_for_this_agent,last_observed_state_for_this_agent, feasible_actions_for_chosen_action,
                        rel_amb_y_min = -41, rel_amb_y_max = 16)
 
         RB_RLAlgorithm.epsilon = RB_RLAlgorithm.min_epsilon + (RB_RLAlgorithm.max_epsilon - RB_RLAlgorithm.min_epsilon) * \
-                                 np.exp(-RB_RLAlgorithm.decay_rate * episode) #TODO: Change epsilone to update every episode not every iteration
+                                 np.exp(-RB_RLAlgorithm.decay_rate * episode)
 
 
 
         print(step,' : ','[agent_vel , agent_lane , amb_vel , amb_lane , rel_amb_y]')
         print(step, ' : ', 'previous_vel', amb_last_velocity)
         print(step,' :  ',Proudhon.observed_state)
-        print(f"{traci.vehicle.getPosition(RB.ID), traci.vehicle.getPosition(LH.ID)}")
-
 
 
         done = Proudhon.are_we_done(full_state=Proudhon.full_state, step_number=step)
@@ -800,10 +794,6 @@ def run():
                 print("We are done here BUT I DON'T KNOW WHY!")
 
             break
-
-        step += 1
-
-
 
         step += 1
 
