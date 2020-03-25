@@ -104,7 +104,7 @@ def run():
 
 if __name__ == "__main__":
 
-
+    #TODO: Create loop over episodes (for episode in range : num_episodes), and print at the end of every episode
     max_window = measure()
 
     options = get_options()
