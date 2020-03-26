@@ -13,7 +13,7 @@ max_num_episodes = 1000 # Number of training episodes
 
 #Visual Update Parameters
 vis_update_params = dict()
-vis_update_params['every_n_episodes'] = 1  # Print Episode info every_n_episodes
+vis_update_params['every_n_episodes'] = 5  # Print Episode info every_n_episodes
 vis_update_params['every_n_iters'] = 5 # Print Iteration info every_n_iters inside single episode
 
 

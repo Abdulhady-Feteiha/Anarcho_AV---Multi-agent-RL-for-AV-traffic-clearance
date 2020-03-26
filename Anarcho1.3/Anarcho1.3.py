@@ -60,6 +60,10 @@ def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
     ########################
 
     # 3: MAIN LOOP
+    if (episode_num % vis_update_params['every_n_episodes'] == 0):
+        print(f'E:{episode_num: <{6}}|S:{0: <{4}} | '
+              f'epsilon: {RB_RLAlgorithm.epsilon: <{6}} |')
+
     while traci.simulation.getMinExpectedNumber() > 0:
 
         # 3.1: Store last states
@@ -78,12 +82,13 @@ def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
             raise ValueError(f"Ambulance Changed lane from {Proudhon.emer_start_lane} to {vehicles_list[0].getL()} on step {step}. "
                              f"\nAmbulance Should not change lane. Quitting.")
 
-        if (step % vis_update_params['every_n_iters'] == 0): # print step info
+        if (step % vis_update_params['every_n_iters'] == 0 and episode_num % vis_update_params['every_n_episodes'] == 0): # print step info
             print(f'E:{episode_num: <{6}}|S:{step: <{4}} | '
                   f'reward : {str(Proudhon.reward)[:min(5,len(str(Proudhon.reward)))]: <{5}}, '
                   f'lastAction: {chosen_action : <{12}} | '
                   f'cumReward: ' + str(episode_reward)[:6] + ' '*max(0, 6 - len(str(episode_reward))) +
-                  f' | state: {[str(x)[:5]+" "*max(0, 5 - len(str(x))) for x in Proudhon.observed_state[0]]}, ')
+                  f' | state: {[str(x)[:5]+" "*max(0, 5 - len(str(x))) for x in Proudhon.observed_state[0]]}, '
+                  f'actionMethod: {RB_RLAlgorithm.action_chosing_method : <{14}}')
         # ----------------------------------------------------------------- #
 
         # 3.3: measurements and if we are done check
@@ -111,13 +116,12 @@ def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
                 else:
                     raise ValueError(f"Episode: {episode_num} done  is True ={done} but reason not known !")
 
-            print(f'E:{episode_num: <{6}}|S:{step: <{4}} : '
-                  f'reward | {str(Proudhon.reward)[:min(5, len(str(Proudhon.reward)))]: <{5}}, '
-                  f'lastAction: {chosen_action : <{12}} | '
-                  f'cumReward: ' + str(episode_reward)[:6] + ' ' * max(0, 6 - len(str(episode_reward))) +
-                  f' | state: {[str(x)[:5] + " " * max(0, 5 - len(str(x))) for x in Proudhon.observed_state[0]]} | '
-                  f'reason: {episode_end_reason: <{14}} ')
-            print('-' * 134)
+                print(f'E:{episode_num: <{6}}|S:{step: <{4}} | '
+                      f'reward : {str(Proudhon.reward)[:min(5, len(str(Proudhon.reward)))]: <{5}}, '
+                      f'lastAction: {chosen_action : <{12}} | '
+                      f'cumReward: ' + str(episode_reward)[:6] + ' ' * max(0, 6 - len(str(episode_reward))) +
+                      f' | state: {[str(x)[:5] + " " * max(0, 5 - len(str(x))) for x in Proudhon.observed_state[0]]}, '
+                      f'actionMethod: {RB_RLAlgorithm.action_chosing_method : <{14}}')
             break
 
 
@@ -136,8 +140,20 @@ def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
 
 
     # 4: Update Epsilon after episode is done
+    old_epsilon = RB_RLAlgorithm.epsilon
     RB_RLAlgorithm.epsilon = RB_RLAlgorithm.min_epsilon + (RB_RLAlgorithm.max_epsilon - RB_RLAlgorithm.min_epsilon) * \
                              np.exp(-RB_RLAlgorithm.decay_rate * episode_num)  # DONE: Change epsilone to update every episode not every iteration
+
+    if (episode_num % vis_update_params['every_n_episodes'] == 0):
+        print(f'\n\nE:{episode_num: <{6}}| END | '
+              f'finalCumReward: ' + str(episode_reward)[:6] + ' ' * max(0, 6 - len(str(episode_reward))) +" | "
+              f'reason: {episode_end_reason: <{15}} | '
+              f'old_eps: {old_epsilon: <{10}}, '
+              f'new_eps: {RB_RLAlgorithm.epsilon: <{10}}')
+        print('-'*157)
+        print('=' * 157)
+        print('\n')
+
 
     return RB_RLAlgorithm, Proudhon, episode_reward, episode_reward_list
 
@@ -153,6 +169,8 @@ if __name__ == "__main__":
         sumoBinary = checkBinary('sumo-gui')
     else:
         sumoBinary = checkBinary('sumo')
+
+    sumoBinary = checkBinary('sumo-gui')
 
     traci.start([sumoBinary, "-c", Sumocfg_DIR,
                              "--tripinfo-output", "tripinfo.xml"])
