@@ -22,10 +22,10 @@ Survey for scenario generation ?
 
 
 Monday:
-- are_we_ok ?
-- pick action, apply action (edit)
-- Code review (Video + Structure)
-
+- GB: are_we_ok ?
+- LH: pick action, apply action (edit)
+- RB: Code review (Video + Structure)
+- RB: Public Repo + Shennawy 
 
 
 

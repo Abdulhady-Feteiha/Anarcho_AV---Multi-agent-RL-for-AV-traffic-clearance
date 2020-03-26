@@ -277,6 +277,8 @@ class RLAlgorithm():
 
 
         #self.Action = self.QActions[randrange(len(self.QActions))]
+        self.exp_exp_tradeoff = random.uniform(0, 1)
+
         if self.exp_exp_tradeoff > self.epsilon:
 
            max_value_index= np.argmax(self.q_table[new_agent_vel_index, new_agent_lane_index, new_amb_vel_index, new_amb_lane_index, new_rel_amb_y_index, feasible_action_indices])
@@ -300,26 +302,6 @@ class RLAlgorithm():
             print("I am the picked action for exploration ", desired_action_string)
             self.Action = desired_action_string
 
-
-
-
-
-
-        '''
-                Edit as follows:
-                ## First we randomize a number
-                exp_exp_tradeoff = random.uniform(0,1)
-
-                ## If this number > greater than epsilon --> exploitation (taking the biggest Q value for this state)
-                if exp_exp_tradeoff > epsilon:
-                    action = np.argmax(qtable[state,:])
-
-                # Else doing a random choice --> exploration
-                else:
-                    action = env.action_space.sample()
-
-                link: https://github.com/simoninithomas/Deep_reinforcement_learning_Course/blob/master/Q%20learning/Taxi-v2/Q%20Learning%20with%20OpenAI%20Taxi-v2%20video%20version.ipynb
-                '''
         return self.Action
 
     def applyAction(self,action,agent):
@@ -346,9 +328,6 @@ class RLAlgorithm():
             pass
 
         #traci.simulationStep()
-
-
-
 
     def update_q_table(self, chosen_action, reward, new_observed_state_for_this_agent,last_observed_state_for_this_agent, feasible_actions_for_chosen_action,
                        rel_amb_y_min = -41, rel_amb_y_max = 16):

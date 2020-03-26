@@ -5,8 +5,9 @@ class Vehicle:
         self.ID = ID
         self.base_route = 1 #Index of base route
         self.length_of_base_route = 100 #Length of base route
+
     def initialize(self):
-        traci.vehicle.setLaneChangeMode(self.ID, 256)
+        traci.vehicle.setLaneChangeMode(self.ID, 512)  # was 256, should be 0
         '''To disable all autonomous changing but still handle safety checks in the simulation,
         either one of the modes 256 (collision avoidance) or 512 (collision avoidance and safety-gap enforcement) may be used.
         ref: https://sumo.dlr.de/docs/TraCI/Change_Vehicle_State.html#lane_change_mode_0xb6'''
@@ -21,6 +22,14 @@ class Vehicle:
         occurs from setSpeed or slowDown functions.
         '''
         self.spd = traci.vehicle.getSpeed(self.ID)
+
+    def getPreviousSpd(self):
+
+        '''Return previous speed to compute reward , it has same code as getSpeed function , I have written it with
+        different name for readability purposes , it is called in the run function before we proceed to next step to get
+        previous speed '''
+
+        self.previous_speed=traci.vehicle.getSpeed(self.ID)
 
     def getRoute(self):
         '''
@@ -55,9 +64,11 @@ class Vehicle:
 
     def getL(self): #ROS
         '''
-        :return: None, but sets index of the lane in which the vehicle resides.
+        :return: current lane of the agent, and sets index of the lane in which the vehicle resides inside the vehicle
+            object of the agent.
         '''
         self.lane = traci.vehicle.getLaneIndex(self.ID)
+        return self.lane
 
     def chL(self,L): #ROS
         '''
@@ -72,6 +83,14 @@ class Vehicle:
         '''
         self.lane = traci.vehicle.getLaneIndex(self.ID) #Force lane update right after to avoid lagging in information
 
+    def chRight(self):
+        lane = traci.vehicle.getLaneIndex(self.ID)
+        traci.vehicle.changeLane(self.ID, lane-1 , SimTime)
+
+    def chLeft(self):
+        lane = traci.vehicle.getLaneIndex(self.ID)
+        traci.vehicle.changeLane(self.ID, (lane) + 1, SimTime)
+
     def acc(self,spd,t):
         '''
         :param spd: speed to reach after time (t)
@@ -79,13 +98,6 @@ class Vehicle:
         :return: None
         '''
         traci.vehicle.slowDown(self.ID,spd,t)
-
-    def revertSpd(self):
-        '''
-        Sets speed instantaneously
-        :return:
-        '''
-        traci.vehicle.setSpeed(self.ID,-1)
 
     def inst_acc(self, acc): #ROS
         ''' accelerate instantaneously'''

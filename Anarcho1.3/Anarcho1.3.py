@@ -27,85 +27,125 @@ def get_options():
     return options
 
 
-def defGlobals():
-    '''
-    :function:  sets a few global variables
-    Q                #Q_table. Multi-dimensional np.ndarray, each dimension: either state partial assignment or action (string action -> integer)
-                      transformation is defined via action_to_string_dict
-                     #Access order for the Q_table is [agent_vel][agent_lane][amb_vel][amb_lane][rel_amb_y][action]
+def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
+    ########################
+    # 1 inits
+    done = False  # are we done with the episode or not
+    step = 1  # step number
+    if(Proudhon is None): Proudhon = env(vehicles_list)  # vehicles_list = [LH, RB]
+    if(RB_RLAlgorithm is None):
+        algo_params = q_learning_params  # from Config.py
+        RB_RLAlgorithm = RLAlgorithm(Proudhon, algo_params= algo_params)  # Algorithm for RB Agent
+    ## ######################
 
-                     #Values are kept as integers by rounding and casting as int. Values are clipped using np.clip() function
-                     # agent_vel  (6): [0,1,2,3,4,5] #Clipped before applying velocity
-                     # agent_lane (3): [0,1,2]
-                     # amb_vel    (11): [0,1,2,3,4,5,6,7,8,9,10]
-                     # amb_lane   (3): [0,1,2]
-                     # rel_amb_y  (16+1+41 = 58): [-41,-40,-39,.....,0,...13,14,15,16]
-                        #since window is designed to be:
-                        #<--4 time steps *10 cells/step  = 40 steps  behind -- . agent . -- 3 steps * 5 cells/sec -->
+    ########################
+    # 2 init measurements
+    traci.simulationStep()  # After stepping
+    Proudhon.get_emer_start_lane()
 
-                    # action     (5) : [Change left, Change right, acc +1, acc -1, acc 0]
+    # (communication from environment):
+    getters(vehicles_list)  # measure all values from environment
+    # (communication to agent):
+    Proudhon.measure_full_state()  # measure all values into our agents
+    # (communication to algorithm):
+    new_observed_state_for_this_agent = Proudhon.observed_state[0]
 
-                    Q_table size, is therefore = 6 * 3 * 11 *3 * 58 * 5 = 172260 ~ 170K .
-                        Note that some Q(s,a) pairs will be infeasible and hence will not be trained/updated.
+    # Chose Action from Feasible Actions:
+    feasible_actions_for_current_state = Proudhon.get_feasible_actions(vehicles_list[1])
+    chosen_action = RB_RLAlgorithm.pickAction(feasible_actions_for_current_state, new_observed_state_for_this_agent)
+    RB_RLAlgorithm.applyAction(chosen_action, vehicles_list[1])  # Request Action on Agent
 
+    episode_reward = 0
+    episode_reward_list = []
+    ########################
 
-    :return:  None. Just defines global variables
-    '''
-
-
-
-
-
-def run():
-    step = 0
-
-
-    Proudhon = env(vehicles_list)  # [LH, RB]
-    traci.simulationStep()  # apply_action
-    # RB_ comment, why didn't you increase the step after applying simulationstep?
-    getters(vehicles_list)
-    #LH.chL(0) #No need for this now, automatic lane change is removed. Checkout Vehicle.__init__() : traci.vehicle.setLaneChangeMode(self.ID, 256)
+    # 3: MAIN LOOP
     while traci.simulation.getMinExpectedNumber() > 0:
 
+        # 3.1: Store last states
         amb_last_velocity = Proudhon.emer.spd
+        last_observed_state = Proudhon.observed_state
+        last_observed_state_for_this_agent = last_observed_state[0]
 
-        traci.simulationStep() #apply_action
+        # ----------------------------------------------------------------- #
+        # 3.2:   M O V E      O N E      S I M U L A T I O N       S T E P
+        # ----------------------------------------------------------------- #
+        traci.simulationStep()  # actual action applying
         step += 1
 
+        #TODO: Turn this into are_we_ok function
+        if(vehicles_list[0].getL() != Proudhon.emer_start_lane):
+            raise ValueError(f"Ambulance Changed lane from {Proudhon.emer_start_lane} to {vehicles_list[0].getL()} on step {step}. "
+                             f"\nAmbulance Should not change lane. Quitting.")
+
+        if (step % vis_update_params['every_n_iters'] == 0): # print step info
+            print(f'E:{episode_num: <{6}}|S:{step: <{4}} | '
+                  f'reward : {str(Proudhon.reward)[:min(5,len(str(Proudhon.reward)))]: <{5}}, '
+                  f'lastAction: {chosen_action : <{12}} | '
+                  f'cumReward: ' + str(episode_reward)[:6] + ' '*max(0, 6 - len(str(episode_reward))) +
+                  f' | state: {[str(x)[:5]+" "*max(0, 5 - len(str(x))) for x in Proudhon.observed_state[0]]}, ')
+        # ----------------------------------------------------------------- #
+
+        # 3.3: measurements and if we are done check
         getters(vehicles_list)
-
         Proudhon.measure_full_state()
-        Proudhon.get_feasible_actions(vehicles_list[1])
-        Proudhon.get_feasible_actions(vehicles_list[0])
-
-        print(step,' : ','[agent_vel , agent_lane , amb_vel , amb_lane , rel_amb_y]')
-        print(step,' :  ',Proudhon.observed_state)
-
         done = Proudhon.are_we_done(full_state=Proudhon.full_state, step_number=step)
 
-        print("reward: ", Proudhon.calc_reward(amb_last_velocity, done, step) )
+        # 3.4: reward last step's chosen action
+        reward = Proudhon.calc_reward(amb_last_velocity, done, step)
+        episode_reward += reward  # for history
+        episode_reward_list.append(reward)  # for history
 
-        if(done):
-            if(done == 1):
-                print("We are done here due to PASSING MAX STEPS NUMBER!")
-            elif(done == 2):
-                print("We are done here due to AMBULANCE PASSING THE GOAL!")
-            elif(done == 3): #TODO: #TOFIX: What should be the state here?
-                print("We are done here due to AGENT PASSING THE GOAL!")
-            else:
-                print("We are done here BUT I DON'T KNOW WHY!")
+        # 3.5: update q table using backward reward logic
+        RB_RLAlgorithm.update_q_table(chosen_action, reward, new_observed_state_for_this_agent,
+                                      last_observed_state_for_this_agent, feasible_actions_for_current_state)
 
+        if (done): # DO NOT REMOVE THIS (IT BREAKS IF WE ARE DONE)
+            if(episode_num % vis_update_params['every_n_episodes'] == 0):
+                if (done == 1):
+                    episode_end_reason = "max steps"
+                elif (done == 2):
+                    episode_end_reason = "ambulance goal"
+                elif (done == 3):  # TODO: #TOFIX: What should be the state here?
+                    episode_end_reason = "agent goal"
+                else:
+                    raise ValueError(f"Episode: {episode_num} done  is True ={done} but reason not known !")
+
+            print(f'E:{episode_num: <{6}}|S:{step: <{4}} : '
+                  f'reward | {str(Proudhon.reward)[:min(5, len(str(Proudhon.reward)))]: <{5}}, '
+                  f'lastAction: {chosen_action : <{12}} | '
+                  f'cumReward: ' + str(episode_reward)[:6] + ' ' * max(0, 6 - len(str(episode_reward))) +
+                  f' | state: {[str(x)[:5] + " " * max(0, 5 - len(str(x))) for x in Proudhon.observed_state[0]]} | '
+                  f'reason: {episode_end_reason: <{14}} ')
+            print('-' * 134)
             break
 
 
+        # 3.6: Feasibility check for current_state (for next step)
+        feasible_actions_for_current_state = Proudhon.get_feasible_actions(vehicles_list[1])
 
-    traci.close()
+        # 3.7: Actually Choose Action from feasible ones (for next step)
+        chosen_action = RB_RLAlgorithm.pickAction(feasible_actions_for_current_state, new_observed_state_for_this_agent)
+
+        # 3.8: Request environment to apply new action (Request action on Agent for next step)
+        # Action is still not applied here, but on #3.2
+        RB_RLAlgorithm.applyAction(chosen_action, vehicles_list[1])
+
+    # Episode end
     sys.stdout.flush()
+
+
+    # 4: Update Epsilon after episode is done
+    RB_RLAlgorithm.epsilon = RB_RLAlgorithm.min_epsilon + (RB_RLAlgorithm.max_epsilon - RB_RLAlgorithm.min_epsilon) * \
+                             np.exp(-RB_RLAlgorithm.decay_rate * episode_num)  # DONE: Change epsilone to update every episode not every iteration
+
+    return RB_RLAlgorithm, Proudhon, episode_reward, episode_reward_list
+
 
 if __name__ == "__main__":
 
-    #TODO: Create loop over episodes (for episode in range : num_episodes), and print at the end of every episode
-    max_window = measure()
+    #TODO: print at the end of every episode/iteration inside epsisode -- according to visualization paramters from Config.py
+    max_window = measure() #TODO: Make Q-table and assignments depend on max_window+10 from behind, and max_agent_velocity*3 forward
 
     options = get_options()
 
@@ -116,6 +156,32 @@ if __name__ == "__main__":
 
     traci.start([sumoBinary, "-c", Sumocfg_DIR,
                              "--tripinfo-output", "tripinfo.xml"])
+
     for vehc in vehicles_list:
         vehc.initialize()
-    run()
+
+    episode_num = 0
+
+    Algorithm_for_RL, environment_for_next_episode, episode_reward, episode_reward_list = episode()
+    total_reward_per_episode.append(episode_reward)
+    reward_history_per_episode.append(episode_reward_list)
+
+
+    traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start"])
+
+    while(episode_num < max_num_episodes):
+        episode_num += 1
+
+        for vehc in vehicles_list:
+            vehc.initialize()  # Placed here to set lane change mode ! Important !
+
+        Algorithm_for_RL, environment_for_next_episode, episode_reward, episode_reward_list = episode(Algorithm_for_RL, environment_for_next_episode, episode_num)
+        total_reward_per_episode.append(episode_reward)
+        reward_history_per_episode.append(episode_reward_list)
+
+        # 5: Reset environment in preparation for next episode
+        environment_for_next_episode.reset()
+
+        # Load XMLs:
+        traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start"])
+

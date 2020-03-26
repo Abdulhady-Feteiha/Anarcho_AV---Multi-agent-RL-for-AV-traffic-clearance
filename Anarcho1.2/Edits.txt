@@ -1,10 +1,34 @@
+#DONE:
+#Review: Functions between Anarcho1.2 and Anarcho1.3 are the same (Reviewed: Vehicle.py, SingleAgent.py --RLAlgorithm, env.py, TODOs)
+# Review prints
+
+
+
+#TODO:
 1- exp_exp_tradeoff should not be assigned inside the code of def run, but rather inside the code of: only one line in run and
 2- Change epsilon to update every episode not every iteration ! IMPORTANT !!!
 
+
+
+
 #Reproducability test: Are same actions picked when running twice? (review random seed)
+and SUMO's random seed: https://sumo.dlr.de/docs/Basics/Using_the_Command_Line_Applications.html#random_number_options
+
 #Review Q-learning algorithms is similar to the one on the website.
 #REview: Reward for different cases (different lanes, different final states: final reward seemed to be faulty earlier)
 
 #TODO: if agent crosses by max_window: then assume car completed all the way as such (running getFollowSpeed several times)
   -- Our SingleAgentCase of this is to just let the simulation run and apply the final reward if the agent leaves first because the
 	ambulance would be directly behind the agent.
+
+
+
+# IMPORTANT: FINAL REWARD SHOULD BE GIVEN TO ALL PREVIOUS ACTIONS !!! --> Remove Final Reward
+# Enable RB_Comments' followspeed back again.
+
+# Is epsilon being set every episode ?
+
+
+# Save and load q-table
+
+#are_we_ok : made sure ambulance does not change lane, still to make sure: agent follows our commands

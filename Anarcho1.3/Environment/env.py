@@ -1,19 +1,23 @@
 import numpy as np
 from Config import track_len
 import traci
-import warnings; do_warn = False          
+import warnings; do_warn = False
+import jinja2
+
 class env():
 
     #TODO: Add env.reset(): ||:Changes .rou file to start: from different lane. ||:Changes network file to start from: different distance.
 
-
-    def __init__(self, list_of_vehicles, name="SingleAgentEvn0.1",  ambulance_goal_distance=500):
+    def __init__(self, list_of_vehicles, name="SingleAgentEvn1.0",  ambulance_goal_distance=500 , rel_amb_y_min = -41, rel_amb_y_max = 16):
 
         self.name = name
         self.list_of_vehicles = list_of_vehicles
         self.amb_goal_dist = ambulance_goal_distance
         self.reward = 0.0
+        self.emer_start_lane = None
 
+        self.rel_amb_y_min = rel_amb_y_min
+        self.rel_amb_y_max = rel_amb_y_max
 
         self.agents = [] #Stays as is in multiagent
         self.emer = None #Stays as is in multiagent
@@ -67,6 +71,61 @@ class env():
         self.optimal_time = int(np.round(track_len/self.emer.max_speed))  #Optimal Number of time steps: number of time steps taken by ambulance at maximum speed
         self.max_steps = 20*self.optimal_time
 
+    def reset(self):
+        '''
+        :function: Resets variables necessary to start next training episode, and reloads randomly initialized next episode XML files.
+        :return: None, but resets environment
+
+        :Notes:
+        * Commented lines are tautologies (do not add new info), kept only for reference to what is inherited from last
+        episode run and from initialization.
+
+        :sources: https://www.eclipse.org/lists/sumo-user/msg03016.html (how to reset SUMO environent from code)
+        '''
+
+        # ------------------------------------------------------------------- #
+        # 1 :        R E S E T       O L D       V A R I A B L E S
+        # ------------------------------------------------------------------- #
+
+        # self.name = self.name
+        # self.list_of_vehicles = self.list_of_vehicles
+        # self.amb_goal_dist = self.amb_goal_dist
+        self.reward = 0.0
+        self.emer_start_lane = None
+
+        #self.rel_amb_y_min = self.rel_amb_y_min
+        # self.rel_amb_y_max = self.rel_amb_y_max
+
+        # self.agents = self.agents
+        # self.emer = self.emer
+
+        self.hidden_state = None
+        self.observed_state = None
+        self.full_state = None
+
+        # self.count_emergency_vehicles = self.count_emergency_vehicles
+        # self.count_ego_vehicles = self.count_ego_vehicles
+
+        # self.Actions = self.Actions
+        # self.action_to_string_dict = self.action_to_string_dict
+
+        # Calculation for optimal time is kept in case the track_len is changed between episodes
+        self.optimal_time = int(np.round(
+            track_len / self.emer.max_speed))  # Optimal Number of time steps: number of time steps taken by ambulance at maximum speed
+        self.max_steps = 20 * self.optimal_time
+
+        # ---------------------------------------------------------------------------- #
+        # 2 :        R A N D O M L Y      I N I T I A L I Z E       X M L s
+        # ---------------------------------------------------------------------------- #
+        # 2.1: Init Agent Start Lane
+
+        # 2.2: Init Emergency Start Lane
+
+        # 2.3: Init Agent Start Position
+
+    def get_emer_start_lane(self):
+        self.emer_start_lane = self.emer.getL()
+
     def measure_full_state(self):
 
         '''
@@ -86,6 +145,8 @@ class env():
         # minus 1 since one vehicle is an emergency vehicle
         hidden_state = [0.0 for i in
                         range(len(self.list_of_vehicles))]  # Entry for each vehicle (review :hidden_state: up)
+        # TODO: Remove the below loop according to RB_comment. Do this in version 1.4 to avoid putting effort into it now
+        #  since it is not a fault
         '''
         RB_ comment:
         repeated assignment, why don't use count_emergency_vehicles, count_ego_vehicles
@@ -124,7 +185,6 @@ class env():
                     f'accommodate your new vehicle type.')
 
         hidden_state[-1] = amb_abs_y
-
 
         self.hidden_state = hidden_state
         self.observed_state = observed_state
@@ -172,9 +232,10 @@ class env():
 
         if(leader_data is None): #If no leader found (i.e. there are no leading vehicles), return max_speed for vehicle with vehID
             return agent.max_speed
-        #else:
+        # else:
         leader_id, distance_to_leader = leader_data #distance to leader (in our terms) = gap - leader_length - my_minGap
         leading_vehicle = self.get_vehicle_object_by_id(leader_id)
+
         follow_speed = traci.vehicle.getFollowSpeed(agent.ID, agent.max_speed, distance_to_leader, leading_vehicle.spd, agent.max_decel, leading_vehicle.ID)
 
         return follow_speed
@@ -195,51 +256,49 @@ class env():
         change_right_possible = traci.vehicle.couldChangeLane(agent.ID, right, state=None)
         decelrate_possible = True  # Always true because of how SUMO depends on the Car Follower model and thus avoids maximum decleration hits.
         # Review TestBench Test Case 06 results for more info.
-        '''
-        RB_ edit:
-        the following is suppressed due to problems with sumo update
-
-        accelerate_possible = min(agent.max_speed, agent.spd + agent.max_accel) <= self.get_follow_speed_by_id(
-            agent.ID)  # NOTE: Checks if maximum acceleration is possible
+        accelerate_possible = min(agent.max_speed, agent.spd + agent.max_accel / 2) <= self.get_follow_speed_by_id(
+            agent.ID)  # NOTE: Checks if maximum acceleration/2 is possible
         # Do Nothing should be always feasible since SUMO/Autonomous functionality will not allow vehicles to crash.
-        '''
+
         if (agent.max_accel > 1.0 and do_warn): warnings.warn(
             f"Please note that agent {agent.ID} has maximum acceleration > 1.0. "
             f"Function env.get_feasible_actions(agent) checks if self.spd+self.max_accel is feasible.")
 
         '''
-        couldChangeLane: Return bool indicating whether the vehicle could change lanes in the specified direction
+        couldChangeLane: Return bool indicating whether the vehicle could change lanes in the specified direction 
         (right: -1, left: 1. sublane-change within current lane: 0).
-        #Check function here https://sumo.dlr.de/docs/TraCI/Vehicle_Value_Retrieval.html
-        #NOTE: getLaneChangeState return much more details about who blocked, if blocking .. etc.
+        #Check function here https://sumo.dlr.de/docs/TraCI/Vehicle_Value_Retrieval.html 
+        #NOTE: getLaneChangeState return much more details about who blocked, if blocking .. etc. 
             #Details: https://sumo.dlr.de/docs/TraCI/Vehicle_Value_Retrieval.html#change_lane_information_0x13
         '''
         if (change_left_possible):
-            print(f'Agent {agent.ID} can change lane to LEFT lane.')
+            #debug#print(f'Agent {agent.ID} can change lane to LEFT lane.')
+            pass
         else:
             feasible_actions.remove("change_left")
-            print(f'Agent {agent.ID} //CAN NOT// change lane to LEFT lane.')
+            #debug#print(f'Agent {agent.ID} //CAN NOT// change lane to LEFT lane.')
 
         if (change_right_possible):
-            print(f'Agent {agent.ID} can change lane to RIGHT lane.')
+            #debug#print(f'Agent {agent.ID} can change lane to RIGHT lane.')
+            pass
         else:
             feasible_actions.remove("change_right")
-            print(f'Agent {agent.ID} //CAN NOT// change lane to RIGHT lane.')
-        '''
-        RB_ edit
-        the following is suppressed due to problems with sumo update, following suppressing the feasability chkeck
+            #debug#print(f'Agent {agent.ID} //CAN NOT// change lane to RIGHT lane.')
+
         if (accelerate_possible):
-            print(f'Agent {agent.ID} can ACCELERATE.. next expected velocity = {self.get_follow_speed_by_id(agent.ID)}')
+            #debug#print(f'Agent {agent.ID} can ACCELERATE.. next expected velocity = {self.get_follow_speed_by_id(agent.ID)}')
+            pass
         else:
             feasible_actions.remove("acc")
-            print(
-                f'Agent {agent.ID} can NOT ACCELERATE.. next expected velocity = {self.get_follow_speed_by_id(agent.ID)}')
-        '''
+            #debug#print(f'Agent {agent.ID} can NOT ACCELERATE.. next expected velocity = {self.get_follow_speed_by_id(agent.ID)}')
 
-        print(f'Feasible actions: ', feasible_actions)
+        # debug#print(f'Feasible actions: ', feasible_actions)
         return feasible_actions
 
     def calc_reward(self, amb_last_velocity, done, number_of_steps, max_final_reward = 20, min_final_reward = -20, max_step_reward=0, min_step_reward = -1.25):
+        # TODO: Fix reward logic to be this_step -> next_step (as opposed to prev_step -> this_step)
+        # TODO: Fix final reward logic according last discussiion : if agent finishes first, assume the ambulance  will conitnue at its current
+        #   velocity till the end.
         '''
         :logic: Calculate reward to agent from current state
         :param amb_last_velocity: float, previous velocity the ambulance (self.emer) had
@@ -272,7 +331,7 @@ class env():
             #2 * self.emer.max_accel since: = self.emer.max_accel - * self.emer.max_decel
             c = max_step_reward - self.emer.max_accel * m  # c is y-intercept for the reward function equation #max_step_reward is the y for x = 2 (max acceleration)
             reward = m * (self.emer.spd - amb_last_velocity) + c
-            print(f'c: {c}, m: {m}, accel: {(self.emer.spd - amb_last_velocity)}')
+            #debug#print(f'c: {c}, m: {m}, accel: {(self.emer.spd - amb_last_velocity)}')
 
             if (abs(self.emer.spd - amb_last_velocity) <= 1e-10 and abs(amb_last_velocity-self.emer.max_speed) <= 1e-10):
             #since ambulance had maximum speed and speed did not change that much; unless we applied the code below.. the acceleration
