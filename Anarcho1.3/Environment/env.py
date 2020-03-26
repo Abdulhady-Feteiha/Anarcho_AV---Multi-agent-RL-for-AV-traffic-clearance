@@ -1,5 +1,5 @@
 import numpy as np
-from Config import track_len
+from Config import track_len, give_final_reward
 import traci
 import warnings; do_warn = False
 import jinja2
@@ -315,7 +315,7 @@ class env():
         #Simulation Time is not allowed to continue after 20*optimal_time (20* time steps with ambulance at its maximum speed)
         '''
 
-        if(done): #Calculate a final reward
+        if(done and give_final_reward): #Calculate a final reward
             #Linear reward. y= mx +c. y: reward, x: ration between time achieved and optimal time. m: slope. c: y-intercept
             m = ( (max_final_reward - min_final_reward) *20 ) /19 #Slope for straight line equation to calculate final reward
             c = max_final_reward - 1*m #c is y-intercept for the reward function equation #max_final_reward is the y for x = 1
