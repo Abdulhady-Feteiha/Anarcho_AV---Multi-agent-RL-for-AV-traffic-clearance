@@ -3,7 +3,10 @@ import numpy as np
 import random
 
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
-Sumocfg_DIR = os.path.join(BASE_PATH, "Sumo_files/Anarcho1.3.sumocfg")
+Sumocfg_DIR = os.path.join(BASE_PATH, r"Sumo_files/Anarcho1.3.sumocfg")
+TEMPLATES_PATH = os.path.join(BASE_PATH, r"Templates")
+NET_FILE_PATH = os.path.join(BASE_PATH, r"Sumo_files\Anarcho1.3.net.xml")
+ROUTE_FILE_PATH = os.path.join(BASE_PATH, r"Sumo_files\Anarcho1.3.rou.xml")
 
 track_len = 500
 SimTime = 1000.0  # Maximum number of time steps per episode
@@ -11,7 +14,7 @@ max_num_episodes = 1000 # Number of training episodes
 
 # Visual Update Parameters
 vis_update_params = dict()
-vis_update_params['every_n_episodes'] = 1  # Print Episode info every_n_episodes
+vis_update_params['every_n_episodes'] = 10  # Print Episode info every_n_episodes
 vis_update_params['every_n_iters'] = 10  # Print Iteration info every_n_iters inside single episode
 
 # History Variables:

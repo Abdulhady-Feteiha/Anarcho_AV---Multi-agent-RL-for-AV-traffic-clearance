@@ -1,5 +1,6 @@
 import numpy as np
-from Config import track_len, give_final_reward
+from Config import *
+import random
 import traci
 import warnings; do_warn = False
 import jinja2
@@ -117,11 +118,32 @@ class env():
         # ---------------------------------------------------------------------------- #
         # 2 :        R A N D O M L Y      I N I T I A L I Z E       X M L s
         # ---------------------------------------------------------------------------- #
+        new_stance = dict()
         # 2.1: Init Agent Start Lane
+        new_stance['agent_start_lane'] = random.randint(0, 2)  # TODO: edit this to automatically retrieve the number of lanes
 
         # 2.2: Init Emergency Start Lane
+        new_stance['ambulance_start_lane'] = random.randint(0, 2)  # TODO: edit this to automatically retrieve the number of lanes
 
         # 2.3: Init Agent Start Position
+        new_stance['agent_start_position'] = random.randint(41, 250)  # TODO: Edit minimum position to depend on starting position
+        new_stance['r1_new_length'] = new_stance['agent_start_position']
+        new_stance['r2_new_length'] = 511 - new_stance['agent_start_position']
+
+        # 2.4: Load Template to template
+        templateLoader = jinja2.FileSystemLoader(searchpath = TEMPLATES_PATH)
+        templateEnv = jinja2.Environment(loader=templateLoader)
+
+        # 2.5: Put rou template to file
+        rou_template = templateEnv.get_template("route_template.xml")
+        with open(ROUTE_FILE_PATH, "w") as fp:
+            fp.writelines(rou_template.render(data=new_stance))
+
+        # 2.6: Put net template to file:
+        net_template = templateEnv.get_template("net_template.xml")
+        with open(NET_FILE_PATH, "w") as fp:
+            fp.writelines(net_template.render(data=new_stance))
+
 
     def get_emer_start_lane(self):
         self.emer_start_lane = self.emer.getL()

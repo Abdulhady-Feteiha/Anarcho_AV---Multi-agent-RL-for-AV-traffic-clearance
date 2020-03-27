@@ -32,7 +32,10 @@ def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
     # 1 inits
     done = False  # are we done with the episode or not
     step = 1  # step number
-    if(Proudhon is None): Proudhon = env(vehicles_list)  # vehicles_list = [LH, RB]
+    if(Proudhon is None):
+        Proudhon = env(vehicles_list)  # vehicles_list = [LH, RB]
+        Proudhon.reset()
+
     if(RB_RLAlgorithm is None):
         algo_params = q_learning_params  # from Config.py
         RB_RLAlgorithm = RLAlgorithm(Proudhon, algo_params= algo_params)  # Algorithm for RB Agent
@@ -62,7 +65,8 @@ def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
     # 3: MAIN LOOP
     if (episode_num % vis_update_params['every_n_episodes'] == 0):
         print(f'E:{episode_num: <{6}}|S:{0: <{4}} | '
-              f'epsilon: {RB_RLAlgorithm.epsilon: <{6}} |')
+              f'epsilon: {RB_RLAlgorithm.epsilon: <{31}} | '
+              f'state: {[str(x)[:5] + " " * max(0, 5 - len(str(x))) for x in Proudhon.observed_state[0]]} |')
 
     while traci.simulation.getMinExpectedNumber() > 0:
 
@@ -145,7 +149,7 @@ def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
                              np.exp(-RB_RLAlgorithm.decay_rate * episode_num)  # DONE: Change epsilone to update every episode not every iteration
 
     if (episode_num % vis_update_params['every_n_episodes'] == 0):
-        print(f'\n\nE:{episode_num: <{6}}| END | '
+        print(f'\n\nE:{episode_num: <{6}}| END:{step: <{4}} | '
               f'finalCumReward: ' + str(episode_reward)[:6] + ' ' * max(0, 6 - len(str(episode_reward))) +" | "
               f'reason: {episode_end_reason: <{15}} | '
               f'old_eps: {old_epsilon: <{10}}, '
@@ -169,8 +173,8 @@ if __name__ == "__main__":
         sumoBinary = checkBinary('sumo-gui')
     else:
         sumoBinary = checkBinary('sumo')
-
     sumoBinary = checkBinary('sumo-gui')
+
 
     traci.start([sumoBinary, "-c", Sumocfg_DIR,
                              "--tripinfo-output", "tripinfo.xml"])
@@ -184,10 +188,12 @@ if __name__ == "__main__":
     total_reward_per_episode.append(episode_reward)
     reward_history_per_episode.append(episode_reward_list)
 
-
+    environment_for_next_episode.reset()
     traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start"])
 
     while(episode_num < max_num_episodes):
+
+
         episode_num += 1
 
         for vehc in vehicles_list:
@@ -199,7 +205,6 @@ if __name__ == "__main__":
 
         # 5: Reset environment in preparation for next episode
         environment_for_next_episode.reset()
-
         # Load XMLs:
         traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start"])
 

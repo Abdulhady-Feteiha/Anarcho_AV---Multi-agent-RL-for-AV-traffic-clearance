@@ -7,7 +7,7 @@ class Vehicle:
         self.length_of_base_route = 100 #Length of base route
 
     def initialize(self):
-        traci.vehicle.setLaneChangeMode(self.ID, 512)  # was 256, should be 0
+        traci.vehicle.setLaneChangeMode(self.ID, 512)  # was 512, should it be 256? # Do we, sometimes, request a change, and it ignores it?
         '''To disable all autonomous changing but still handle safety checks in the simulation,
         either one of the modes 256 (collision avoidance) or 512 (collision avoidance and safety-gap enforcement) may be used.
         ref: https://sumo.dlr.de/docs/TraCI/Change_Vehicle_State.html#lane_change_mode_0xb6'''
