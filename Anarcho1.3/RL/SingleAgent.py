@@ -1,5 +1,6 @@
 import numpy as np
 import random
+from Config import *
 
 class RLAlgorithm():
     '''
@@ -22,7 +23,10 @@ class RLAlgorithm():
 
         # algo_params:
         if (name == "Q-learning"):  # default case for now
-            self.q_table = np.zeros((6, 3, 11, 3, 58, 5))
+            if(load_q_table):
+                self.q_table = self.load_q_table()
+            else:
+                self.q_table = np.zeros((6, 3, 11, 3, 58, 5))
             self.exp_exp_tradeoff = algo_params['exp_exp_tradeoff']
             self.epsilon = algo_params['epsilon']
 
@@ -204,3 +208,9 @@ class RLAlgorithm():
                             Note that some Q(s,a) pairs will be infeasible and hence will not be trained/updated.
         '''
 
+    def save_q_table(self, variables_folder_path = VARIABLES_FOLDER):
+        np.save(variables_folder_path+'/Q_TABLE.npy', self.q_table)
+        print(f"Loaded Q_TABLE from {variables_folder_path+'/Q_TABLE.npy'}")
+
+    def load_q_table(self, variables_folder_path = VARIABLES_FOLDER):
+        return np.load(variables_folder_path+'/Q_TABLE.npy')

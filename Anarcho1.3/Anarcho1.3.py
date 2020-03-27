@@ -38,7 +38,7 @@ def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
 
     if(RB_RLAlgorithm is None):
         algo_params = q_learning_params  # from Config.py
-        RB_RLAlgorithm = RLAlgorithm(Proudhon, algo_params= algo_params)  # Algorithm for RB Agent
+        RB_RLAlgorithm = RLAlgorithm(Proudhon, algo_params= algo_params, load_q_table = load_q_table)  # Algorithm for RB Agent
     ## ######################
 
     ########################
@@ -99,6 +99,7 @@ def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
         getters(vehicles_list)
         Proudhon.measure_full_state()
         done = Proudhon.are_we_done(full_state=Proudhon.full_state, step_number=step)
+        new_observed_state_for_this_agent = Proudhon.observed_state[0]
 
         # 3.4: reward last step's chosen action
         reward = Proudhon.calc_reward(amb_last_velocity, done, step)
@@ -165,7 +166,7 @@ def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
 if __name__ == "__main__":
 
     #TODO: print at the end of every episode/iteration inside epsisode -- according to visualization paramters from Config.py
-    max_window = measure() #TODO: Make Q-table and assignments depend on max_window+10 from behind, and max_agent_velocity*3 forward
+    #max_window = measure() #TODO: Make Q-table and assignments depend on max_window+10 from behind, and max_agent_velocity*3 forward
 
     options = get_options()
 
@@ -173,7 +174,7 @@ if __name__ == "__main__":
         sumoBinary = checkBinary('sumo-gui')
     else:
         sumoBinary = checkBinary('sumo')
-    sumoBinary = checkBinary('sumo-gui')
+    # sumoBinary = checkBinary('sumo-gui')
 
 
     traci.start([sumoBinary, "-c", Sumocfg_DIR,
@@ -207,4 +208,7 @@ if __name__ == "__main__":
         environment_for_next_episode.reset()
         # Load XMLs:
         traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start"])
+
+    # Save Q-table after episodes ended:
+    Algorithm_for_RL.save_q_table()
 
