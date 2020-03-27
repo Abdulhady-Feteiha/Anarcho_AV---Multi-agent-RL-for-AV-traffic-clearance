@@ -9,7 +9,7 @@ class env():
 
     #TODO: Add env.reset(): ||:Changes .rou file to start: from different lane. ||:Changes network file to start from: different distance.
 
-    def __init__(self, list_of_vehicles, name="SingleAgentEvn1.0",  ambulance_goal_distance=500 , rel_amb_y_min = -41, rel_amb_y_max = 16):
+    def __init__(self, list_of_vehicles, name="SingleAgentEvn1.0",  ambulance_goal_distance=500, rel_amb_y_min = -41, rel_amb_y_max = 16):
 
         self.name = name
         self.list_of_vehicles = list_of_vehicles
@@ -30,7 +30,7 @@ class env():
         self.count_emergency_vehicles = 0
         self.count_ego_vehicles = 0
 
-        self.Actions = ["change_left", "change_right", "acc", "dec", "no_acc"]
+        self.Actions = ["change_left", "change_right", "acc", "no_acc", "dec"]
         self.action_to_string_dict = {
             "change_left": 0,
             "change_right": 1,
@@ -39,8 +39,7 @@ class env():
             "dec": 4
         }  # Must maintain order in Actions
 
-
-        for vhcl in self.list_of_vehicles:
+        for vhcl in self.list_of_vehicles:  # Count vehicles according to vehicle type
 
             if (vhcl.type == "Emergency"):
                 # ------------------------ checks - start -----------------------#
@@ -94,7 +93,7 @@ class env():
         self.reward = 0.0
         self.emer_start_lane = None
 
-        #self.rel_amb_y_min = self.rel_amb_y_min
+        # self.rel_amb_y_min = self.rel_amb_y_min
         # self.rel_amb_y_max = self.rel_amb_y_max
 
         # self.agents = self.agents
@@ -144,8 +143,7 @@ class env():
         with open(NET_FILE_PATH, "w") as fp:
             fp.writelines(net_template.render(data=new_stance))
 
-
-    def get_emer_start_lane(self):
+    def get_emer_start_lane(self):  # Called at beginning of episode only
         self.emer_start_lane = self.emer.getL()
 
     def measure_full_state(self):
@@ -245,7 +243,7 @@ class env():
         for vhc in self.list_of_vehicles:
             if vhc.ID == vehID :
                 return vhc
-        return None #If vehID does not belong to any vehicle, None value is returned
+        return None  # If vehID does not belong to any vehicle, None value is returned
 
     def get_follow_speed_by_id(self, vehID):
 
@@ -274,6 +272,7 @@ class env():
 
         left = 1
         right = -1
+
         change_left_possible = traci.vehicle.couldChangeLane(agent.ID, left, state=None)
         change_right_possible = traci.vehicle.couldChangeLane(agent.ID, right, state=None)
         decelrate_possible = True  # Always true because of how SUMO depends on the Car Follower model and thus avoids maximum decleration hits.
@@ -318,7 +317,6 @@ class env():
         return feasible_actions
 
     def calc_reward(self, amb_last_velocity, done, number_of_steps, max_final_reward = 20, min_final_reward = -20, max_step_reward=0, min_step_reward = -1.25):
-        # TODO: Fix reward logic to be this_step -> next_step (as opposed to prev_step -> this_step)
         # TODO: Fix final reward logic according last discussiion : if agent finishes first, assume the ambulance  will conitnue at its current
         #   velocity till the end.
         '''
@@ -349,13 +347,16 @@ class env():
         else: #Calcualate a step reward
             steps_needed_to_halt = 30
             ration_of_halt_steps_to_total_steps = steps_needed_to_halt/track_len
+
+            self.emer.getSpd()  # Make sure emergency vehicle's speed is up-to-date
+
             m = (max_step_reward - min_step_reward)/(2 * self.emer.max_accel)  # Slope for straight line equation to calculate step reward
             #2 * self.emer.max_accel since: = self.emer.max_accel - * self.emer.max_decel
             c = max_step_reward - self.emer.max_accel * m  # c is y-intercept for the reward function equation #max_step_reward is the y for x = 2 (max acceleration)
             reward = m * (self.emer.spd - amb_last_velocity) + c
             #debug#print(f'c: {c}, m: {m}, accel: {(self.emer.spd - amb_last_velocity)}')
 
-            if (abs(self.emer.spd - amb_last_velocity) <= 1e-10 and abs(amb_last_velocity-self.emer.max_speed) <= 1e-10):
+            if ( abs(amb_last_velocity-self.emer.max_speed) <= 1e-10 ):
             #since ambulance had maximum speed and speed did not change that much; unless we applied the code below.. the acceleration
             #   will be wrongly assumed to be zero. Although the ambulance probably could have accelerated more, but this is its maximum velocity.
                 reward = max_step_reward #same reward as maximum acceleration (+2),

@@ -7,17 +7,17 @@ class RLAlgorithm():
     Access order for the Q_table is [agent_vel][agent_lane][amb_vel][amb_lane][rel_amb_y][action].. remember to change the value rel_amb_y to be positive [0,58]
     '''
 
-    def __init__(self, environment, name="Q-learning", algo_params=dict()):
+    def __init__(self, environment, name="Q-learning", algo_params=dict(), load_q_table = False):
         '''
         #Usage is: One RLAlgorithm object per training agent
         :param environment:  of class env, contains list of vehicles and observations.
         :param name:         string, currently not used except for display purposes
         '''
-        self.name = name
+        self.name = name #Useless now in 1.3
         self.environment = environment
         self.QActions = self.environment.Actions
         # self.feasible_actions = self.environment.ge
-        self.action_to_string_dict = self.environment.action_to_string_dict
+        self.action_to_string_dict = self.environment.action_to_string_dict #TODO: var_name_change action_to_string_dict to action_string_to_index_dict
 
         self.action_chosing_method = None  # To be asssigned: Exploration or Exploitation based on exp_exp_tradeoff and epsilon
 
@@ -37,13 +37,18 @@ class RLAlgorithm():
             self.decay_rate = algo_params['decay_rate']
 
     def pickAction(self, feasible_actions_for_chosen_action, new_observed_state_for_this_agent):
+        '''
+        :param feasible_actions_for_chosen_action: feasible actions for new_observed_state_for_this_agent to choose from
+        :param new_observed_state_for_this_agent: current state to choose action for
+        :return:
+        '''
         #TODO: feasible_actions_for_chosen_action -->>> var_name_change ACTUALLY: feasible_actions_for_current_state
         feasible_action_indices = []
         for act in feasible_actions_for_chosen_action:
             feasible_action_indices.append(self.action_to_string_dict[act])
 
-        rel_amb_y_min = self.environment.rel_amb_y_min
-        rel_amb_y_max = self.environment.rel_amb_y_max
+        rel_amb_y_min = self.environment.rel_amb_y_min  # -41
+        rel_amb_y_max = self.environment.rel_amb_y_max  # +16 #TODO: Does it have a meaning ?
 
         new_agent_vel = new_observed_state_for_this_agent[0]
         new_agent_vel_index = int(np.round(new_agent_vel))  # [0,1,2,3,4,5]
@@ -102,9 +107,9 @@ class RLAlgorithm():
 
     def applyAction(self, action, agent):
         '''
-
-        :param action: action chosen by pick Action function
-        :param agent: our lovely RL agent
+        :function: Requests environment to apply an action on given agent
+        :param action: string, action chosen by pick Action function
+        :param agent: Vehicle object, our lovely RL agent
         :return: None but it apply action on the agent
 
         this function has a hard coded in acc , dec function as till know we have used +1,-1 to be only possible values
@@ -123,26 +128,30 @@ class RLAlgorithm():
             agent.inst_acc(-1)  # hard coded
         elif action == "no_acc":
             pass
+        else:  # Unrecognized action
+            raise ValueError(f"Unrecgonized action requested from {agent.ID}.applyAction: {action}")
 
     def update_q_table(self, chosen_action, reward, new_observed_state_for_this_agent,
-                       last_observed_state_for_this_agent, feasible_actions_for_chosen_action):
+                       last_observed_state_for_this_agent, feasible_actions_for_new_observed_state):
         '''
+        :param chosen_action: action chosen over last time step, the one for which we see the results in new_observed_state_for_this_agent
+        :param reward: reward due to applying the chosen_action on last_observed_state_for_this_agent and getting new_observed_state_for_this_agent
+        :param new_observed_state_for_this_agent: observed state due to applying chose_action on last_observed_state_for_this_agent
+        :param feasible_actions_for_new_observed_state: feasible action for feasible_actions_for_new_observed_state
 
-        :param chosen_action:
-        :param observed_state:
-        :return:
+        :return: None, but updates q_table
 
         :Notes:
         #Assumed Hierarchy of observed_state_for_this_agent:[agent_vel , agent_lane , amb_vel , amb_lane , rel_amb_y]
 
         '''
 
+        rel_amb_y_min = self.environment.rel_amb_y_min
+        rel_amb_y_max = self.environment.rel_amb_y_max
+
         # OLD STATE VARIABLES:
         agent_vel = last_observed_state_for_this_agent[0]
         agent_vel_index = int(np.round(agent_vel))  # [0,1,2,3,4,5]
-
-        rel_amb_y_min = self.environment.rel_amb_y_min
-        rel_amb_y_max = self.environment.rel_amb_y_max
 
         agent_lane_index = last_observed_state_for_this_agent[1]
 
@@ -174,16 +183,28 @@ class RLAlgorithm():
 
         # Feasible Action Indices:
         feasible_action_indices = []
-        for act in feasible_actions_for_chosen_action:
+        for act in feasible_actions_for_new_observed_state:
             feasible_action_indices.append(self.action_to_string_dict[act])
 
         # Update Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
+        '''
+        s: old state for which a was decided
+        a: action taken in state s
+        s': new state we are in because of action a (previous action)
+        a': new action we are expected to choose if we exploit on s' (new state)
+        '''
+        # Q(s,a):
         q_of_s_a_value = \
         self.q_table[agent_vel_index][agent_lane_index][amb_vel_index][amb_lane_index][rel_amb_y_index][action_index]
+
+        # max Q(s',a')
         max_q_of_s_value_new = np.max(self.q_table[
                                           new_agent_vel_index, new_agent_lane_index, new_amb_vel_index, new_amb_lane_index, new_rel_amb_y_index, feasible_action_indices])
-        q_of_s_a_value = q_of_s_a_value + self.learning_rate * (
-                    reward + self.gamma * max_q_of_s_value_new - q_of_s_a_value)
+
+        # Actual Update:
+        q_of_s_a_value = q_of_s_a_value + self.learning_rate * (reward + self.gamma * max_q_of_s_value_new - q_of_s_a_value)
+
+
         # actual update step:
         self.q_table[agent_vel_index][agent_lane_index][amb_vel_index][amb_lane_index][rel_amb_y_index][
             action_index] = q_of_s_a_value
@@ -210,7 +231,8 @@ class RLAlgorithm():
 
     def save_q_table(self, variables_folder_path = VARIABLES_FOLDER):
         np.save(variables_folder_path+'/Q_TABLE.npy', self.q_table)
-        print(f"Loaded Q_TABLE from {variables_folder_path+'/Q_TABLE.npy'}")
+
 
     def load_q_table(self, variables_folder_path = VARIABLES_FOLDER):
+        print(f"Loaded Q_TABLE from {variables_folder_path + '/Q_TABLE.npy'}")
         return np.load(variables_folder_path+'/Q_TABLE.npy')

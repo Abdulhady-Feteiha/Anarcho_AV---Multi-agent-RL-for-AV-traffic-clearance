@@ -31,10 +31,15 @@ def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
     ########################
     # 1 inits
     done = False  # are we done with the episode or not
-    step = 1  # step number
+    step = 0  # step number
     if(Proudhon is None):
         Proudhon = env(vehicles_list)  # vehicles_list = [LH, RB]
+        ## -- ##
         Proudhon.reset()
+        traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml"])
+        for vehc in vehicles_list:
+            vehc.initialize()
+        ## -- ##
 
     if(RB_RLAlgorithm is None):
         algo_params = q_learning_params  # from Config.py
@@ -46,11 +51,11 @@ def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
     traci.simulationStep()  # After stepping
     Proudhon.get_emer_start_lane()
 
-    # (communication from environment):
+    # (communication from vehicle):
     getters(vehicles_list)  # measure all values from environment
-    # (communication to agent):
+    # (communication to environment):
     Proudhon.measure_full_state()  # measure all values into our agents
-    # (communication to algorithm):
+    # (communication to algorithm/agent):
     new_observed_state_for_this_agent = Proudhon.observed_state[0]
 
     # Chose Action from Feasible Actions:
@@ -98,13 +103,18 @@ def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
         # 3.3: measurements and if we are done check
         getters(vehicles_list)
         Proudhon.measure_full_state()
-        done = Proudhon.are_we_done(full_state=Proudhon.full_state, step_number=step)
         new_observed_state_for_this_agent = Proudhon.observed_state[0]
+
+        done = Proudhon.are_we_done(full_state=Proudhon.full_state, step_number=step)
+
 
         # 3.4: reward last step's chosen action
         reward = Proudhon.calc_reward(amb_last_velocity, done, step)
         episode_reward += reward  # for history
         episode_reward_list.append(reward)  # for history
+
+        # 3.6: Feasibility check for current_state (for next step)
+        feasible_actions_for_current_state = Proudhon.get_feasible_actions(vehicles_list[1])
 
         # 3.5: update q table using backward reward logic
         RB_RLAlgorithm.update_q_table(chosen_action, reward, new_observed_state_for_this_agent,
@@ -112,7 +122,7 @@ def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
 
         if (done): # DO NOT REMOVE THIS (IT BREAKS IF WE ARE DONE)
             if(episode_num % vis_update_params['every_n_episodes'] == 0):
-                if (done == 1):
+                if (done == 1): # TODO: Remove episode_end_reason outsisde the print check -- we might need it elsewehere
                     episode_end_reason = "max steps"
                 elif (done == 2):
                     episode_end_reason = "ambulance goal"
@@ -130,10 +140,7 @@ def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
             break
 
 
-        # 3.6: Feasibility check for current_state (for next step)
-        feasible_actions_for_current_state = Proudhon.get_feasible_actions(vehicles_list[1])
-
-        # 3.7: Actually Choose Action from feasible ones (for next step)
+               # 3.7: Actually Choose Action from feasible ones (for next step)
         chosen_action = RB_RLAlgorithm.pickAction(feasible_actions_for_current_state, new_observed_state_for_this_agent)
 
         # 3.8: Request environment to apply new action (Request action on Agent for next step)
@@ -147,7 +154,7 @@ def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
     # 4: Update Epsilon after episode is done
     old_epsilon = RB_RLAlgorithm.epsilon
     RB_RLAlgorithm.epsilon = RB_RLAlgorithm.min_epsilon + (RB_RLAlgorithm.max_epsilon - RB_RLAlgorithm.min_epsilon) * \
-                             np.exp(-RB_RLAlgorithm.decay_rate * episode_num)  # DONE: Change epsilone to update every episode not every iteration
+                             np.exp(-RB_RLAlgorithm.decay_rate * episode_num)  # DONE: Change epsilon to update every episode not every iteration
 
     if (episode_num % vis_update_params['every_n_episodes'] == 0):
         print(f'\n\nE:{episode_num: <{6}}| END:{step: <{4}} | '
@@ -174,14 +181,15 @@ if __name__ == "__main__":
         sumoBinary = checkBinary('sumo-gui')
     else:
         sumoBinary = checkBinary('sumo')
-    # sumoBinary = checkBinary('sumo-gui')
+    sumoBinary = checkBinary('sumo-gui')
 
 
+    ## ----- ##
     traci.start([sumoBinary, "-c", Sumocfg_DIR,
                              "--tripinfo-output", "tripinfo.xml"])
-
     for vehc in vehicles_list:
         vehc.initialize()
+    ## ----- ##
 
     episode_num = 0
 
@@ -189,25 +197,29 @@ if __name__ == "__main__":
     total_reward_per_episode.append(episode_reward)
     reward_history_per_episode.append(episode_reward_list)
 
+    ## --- ##
     environment_for_next_episode.reset()
     traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start"])
+    for vehc in vehicles_list:
+        vehc.initialize()  # Placed here to set lane change mode ! Important !
+    ## --- ##
 
     while(episode_num < max_num_episodes):
 
-
         episode_num += 1
-
-        for vehc in vehicles_list:
-            vehc.initialize()  # Placed here to set lane change mode ! Important !
 
         Algorithm_for_RL, environment_for_next_episode, episode_reward, episode_reward_list = episode(Algorithm_for_RL, environment_for_next_episode, episode_num)
         total_reward_per_episode.append(episode_reward)
         reward_history_per_episode.append(episode_reward_list)
 
+        ## -- ##
         # 5: Reset environment in preparation for next episode
         environment_for_next_episode.reset()
         # Load XMLs:
         traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start"])
+        for vehc in vehicles_list:
+            vehc.initialize()  # Placed here to set lane change mode ! Important !
+        ## -- ##
 
     # Save Q-table after episodes ended:
     Algorithm_for_RL.save_q_table()

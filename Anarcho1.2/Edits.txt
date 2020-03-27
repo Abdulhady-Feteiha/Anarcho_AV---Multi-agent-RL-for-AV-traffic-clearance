@@ -3,37 +3,37 @@
 # Review prints :: Made a diagnostics-printing system
 # IMPORTANT: FINAL REWARD SHOULD BE GIVEN TO ALL PREVIOUS ACTIONS !!! --> Remove Final Reward 
 	(Kept optional, else: final reward is given to last action.. which is wrong)
-# Enable RB_Comments' followspeed back again : Found it was already on. Weird.
+# Enable RB_Comments' followspeed back again : Found it was already on. Weird
+# Is epsilon being set every episode ? 2- Change epsilon to update every episode not every iteration ! IMPORTANT !!!
+1- exp_exp_tradeoff should not be assigned inside the code of def run, but rather inside the code of: only one line in run and in pickAction
 
 
 
 #TODO:
-1- exp_exp_tradeoff should not be assigned inside the code of def run, but rather inside the code of: only one line in run and
-2- Change epsilon to update every episode not every iteration ! IMPORTANT !!!
-
 
 #IMPORTANT: # Do we, sometimes, request a lane change, and it ignores it due to safety reasons? What is that yellow light ?
+#are_we_ok : made sure ambulance does not change lane, still to make sure: agent follows our commands
 
+# Save and load q-table: does it really work ?..overwrrite, know which q_table it is.
 
-#Reproducability test: Are same actions picked when running twice? (review random seed)
+#1 Reproducebility test: Are same actions picked when running twice? (review random seed)
 and SUMO's random seed: https://sumo.dlr.de/docs/Basics/Using_the_Command_Line_Applications.html#random_number_options
 and make sure the Random lane initialization happens at the beginning of the environment initialization to avoid loading lanes from previous loop over episodes (previous run)
 	since the file is save on the hard disk --Done (last part, 1/3) by adding Proudhon.reset to episode() function, if Proudhon is not input
 
-#Review Q-learning algorithms is similar to the one on the website.
-#REview: Reward for different cases (different lanes, different final states: final reward seemed to be faulty earlier)
+#2 Review Q-learning algorithms is similar to the one on the website.:: update times.. measuring times .. look-ahead: timing right- right action- correct future state?.. feasible future action (not all actions!)?
+
+#3 Review: Reward for different cases (different lanes, different distances (+/-), different final states: final reward seemed to be faulty earlier)
+
+
+#4 Review: is q-table the same between episodes ?
+
 
 #TODO: if agent crosses by max_window: then assume car completed all the way as such (running getFollowSpeed several times)
   -- Our SingleAgentCase of this is to just let the simulation run and apply the final reward if the agent leaves first because the
 	ambulance would be directly behind the agent.
 
+================================================================================================================
 
 
-
-
-# Is epsilon being set every episode ?
-
-
-# Save and load q-table
-
-#are_we_ok : made sure ambulance does not change lane, still to make sure: agent follows our commands
+#Final-Reward:: PASSIVITY not rewarded anymore.

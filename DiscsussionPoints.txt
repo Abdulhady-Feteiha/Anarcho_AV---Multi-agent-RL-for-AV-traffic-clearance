@@ -1,0 +1,3 @@
+- getPreviousSpeed ?
+- rel_amb_y_max:: do we need it ? ambulance will not reach it anyway
+- clip value for distance ? or just ignore ? --try in our experiments
