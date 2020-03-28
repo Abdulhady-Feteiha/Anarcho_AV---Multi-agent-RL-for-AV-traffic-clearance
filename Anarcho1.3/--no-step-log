@@ -1,0 +1,13 @@
+Loading net-file from 'D:\Career\GP\RLRep\Anarcho1.3\Sumo_files/Anarcho1.3.net.xml' ... done (10ms).
+Loading done.
+Simulation started with time: 0.00
+Simulation ended at time: 34.00
+Performance: 
+ Duration: 5921ms
+ Real time factor: 5.74227
+ UPS: 11.484547
+Vehicles: 
+ Inserted: 2
+ Running: 2
+ Waiting: 0
+

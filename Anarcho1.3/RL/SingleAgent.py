@@ -7,13 +7,15 @@ class RLAlgorithm():
     Access order for the Q_table is [agent_vel][agent_lane][amb_vel][amb_lane][rel_amb_y][action].. remember to change the value rel_amb_y to be positive [0,58]
     '''
 
-    def __init__(self, environment, name="Q-learning", algo_params=dict(), load_q_table = False):
+    def __init__(self, environment, name="Q-learning", algo_params=dict(), load_q_table = False, test_mode_on = False):
         '''
         #Usage is: One RLAlgorithm object per training agent
         :param environment:  of class env, contains list of vehicles and observations.
         :param name:         string, currently not used except for display purposes
         '''
         self.name = name #Useless now in 1.3
+        self.test_mode_on = test_mode_on
+
         self.environment = environment
         self.QActions = self.environment.Actions
         # self.feasible_actions = self.environment.ge
@@ -23,7 +25,7 @@ class RLAlgorithm():
 
         # algo_params:
         if (name == "Q-learning"):  # default case for now
-            if(load_q_table):
+            if(load_q_table or self.test_mode_on): # load_q_table if we are testing or we want to load it
                 self.q_table = self.load_q_table()
             else:
                 self.q_table = np.zeros((6, 3, 11, 3, 58, 5))
@@ -84,7 +86,7 @@ class RLAlgorithm():
         #self.Action = self.QActions[randrange(len(self.QActions))]
         self.exp_exp_tradeoff = random.uniform(0,1)
 
-        if self.exp_exp_tradeoff > self.epsilon:
+        if (self.exp_exp_tradeoff > self.epsilon or self.test_mode_on):  # tes_mode_on will force the algorithm to choose exploitation.
             self.action_chosing_method = 'expLOIT'
 
             max_value_index= np.argmax(self.q_table[new_agent_vel_index, new_agent_lane_index, new_amb_vel_index, new_amb_lane_index, new_rel_amb_y_index, feasible_action_indices])
@@ -145,69 +147,71 @@ class RLAlgorithm():
         #Assumed Hierarchy of observed_state_for_this_agent:[agent_vel , agent_lane , amb_vel , amb_lane , rel_amb_y]
 
         '''
+        if(self.test_mode_on):  # do not update q_table if test_mode is on ! just use it.
+            pass
+        else:
+            rel_amb_y_min = self.environment.rel_amb_y_min
+            rel_amb_y_max = self.environment.rel_amb_y_max
 
-        rel_amb_y_min = self.environment.rel_amb_y_min
-        rel_amb_y_max = self.environment.rel_amb_y_max
+            # OLD STATE VARIABLES:
+            agent_vel = last_observed_state_for_this_agent[0]
+            agent_vel_index = int(np.round(agent_vel))  # [0,1,2,3,4,5]
 
-        # OLD STATE VARIABLES:
-        agent_vel = last_observed_state_for_this_agent[0]
-        agent_vel_index = int(np.round(agent_vel))  # [0,1,2,3,4,5]
+            agent_lane_index = last_observed_state_for_this_agent[1]
 
-        agent_lane_index = last_observed_state_for_this_agent[1]
+            amb_vel = last_observed_state_for_this_agent[2]
+            amb_vel_index = int(np.round(amb_vel))  # [0,1,2,3,4,5,6,7,8,9,10]
 
-        amb_vel = last_observed_state_for_this_agent[2]
-        amb_vel_index = int(np.round(amb_vel))  # [0,1,2,3,4,5,6,7,8,9,10]
+            amb_lane_index = last_observed_state_for_this_agent[3]
 
-        amb_lane_index = last_observed_state_for_this_agent[3]
-
-        rel_amb_y = np.clip(last_observed_state_for_this_agent[4], rel_amb_y_min,
-                            rel_amb_y_max)  # rel_amb_y  (16+1+41 = 58): [-41,-40,-39,.....,0,...13,14,15,16]
-        rel_amb_y_index = int(np.round(rel_amb_y) + abs(rel_amb_y_min))
-
-        action_index = self.action_to_string_dict[chosen_action]
-
-        # NEW STATE VARIABLES:
-        new_agent_vel = new_observed_state_for_this_agent[0]
-        new_agent_vel_index = int(np.round(new_agent_vel))  # [0,1,2,3,4,5]
-
-        new_agent_lane_index = new_observed_state_for_this_agent[1]
-
-        new_amb_vel = new_observed_state_for_this_agent[2]
-        new_amb_vel_index = int(np.round(new_amb_vel))  # [0,1,2,3,4,5,6,7,8,9,10]
-
-        new_amb_lane_index = new_observed_state_for_this_agent[3]
-
-        new_rel_amb_y = np.clip(new_observed_state_for_this_agent[4], rel_amb_y_min,
+            rel_amb_y = np.clip(last_observed_state_for_this_agent[4], rel_amb_y_min,
                                 rel_amb_y_max)  # rel_amb_y  (16+1+41 = 58): [-41,-40,-39,.....,0,...13,14,15,16]
-        new_rel_amb_y_index = int(np.round(new_rel_amb_y) + abs(rel_amb_y_min))
+            rel_amb_y_index = int(np.round(rel_amb_y) + abs(rel_amb_y_min))
 
-        # Feasible Action Indices:
-        feasible_action_indices = []
-        for act in feasible_actions_for_new_observed_state:
-            feasible_action_indices.append(self.action_to_string_dict[act])
+            action_index = self.action_to_string_dict[chosen_action]
 
-        # Update Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
-        '''
-        s: old state for which a was decided
-        a: action taken in state s
-        s': new state we are in because of action a (previous action)
-        a': new action we are expected to choose if we exploit on s' (new state)
-        '''
-        # Q(s,a):
-        q_of_s_a_value = \
-        self.q_table[agent_vel_index][agent_lane_index][amb_vel_index][amb_lane_index][rel_amb_y_index][action_index]
+            # NEW STATE VARIABLES:
+            new_agent_vel = new_observed_state_for_this_agent[0]
+            new_agent_vel_index = int(np.round(new_agent_vel))  # [0,1,2,3,4,5]
 
-        # max Q(s',a')
-        max_q_of_s_value_new = np.max(self.q_table[
-                                          new_agent_vel_index, new_agent_lane_index, new_amb_vel_index, new_amb_lane_index, new_rel_amb_y_index, feasible_action_indices])
+            new_agent_lane_index = new_observed_state_for_this_agent[1]
 
-        # Actual Update:
-        q_of_s_a_value = q_of_s_a_value + self.learning_rate * (reward + self.gamma * max_q_of_s_value_new - q_of_s_a_value)
+            new_amb_vel = new_observed_state_for_this_agent[2]
+            new_amb_vel_index = int(np.round(new_amb_vel))  # [0,1,2,3,4,5,6,7,8,9,10]
+
+            new_amb_lane_index = new_observed_state_for_this_agent[3]
+
+            new_rel_amb_y = np.clip(new_observed_state_for_this_agent[4], rel_amb_y_min,
+                                    rel_amb_y_max)  # rel_amb_y  (16+1+41 = 58): [-41,-40,-39,.....,0,...13,14,15,16]
+            new_rel_amb_y_index = int(np.round(new_rel_amb_y) + abs(rel_amb_y_min))
+
+            # Feasible Action Indices:
+            feasible_action_indices = []
+            for act in feasible_actions_for_new_observed_state:
+                feasible_action_indices.append(self.action_to_string_dict[act])
+
+            # Update Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
+            '''
+            s: old state for which a was decided
+            a: action taken in state s
+            s': new state we are in because of action a (previous action)
+            a': new action we are expected to choose if we exploit on s' (new state)
+            '''
+            # Q(s,a):
+            q_of_s_a_value = \
+            self.q_table[agent_vel_index][agent_lane_index][amb_vel_index][amb_lane_index][rel_amb_y_index][action_index]
+
+            # max Q(s',a')
+            max_q_of_s_value_new = np.max(self.q_table[
+                                              new_agent_vel_index, new_agent_lane_index, new_amb_vel_index, new_amb_lane_index, new_rel_amb_y_index, feasible_action_indices])
+
+            # Actual Update:
+            q_of_s_a_value = q_of_s_a_value + self.learning_rate * (reward + self.gamma * max_q_of_s_value_new - q_of_s_a_value)
 
 
-        # actual update step:
-        self.q_table[agent_vel_index][agent_lane_index][amb_vel_index][amb_lane_index][rel_amb_y_index][
-            action_index] = q_of_s_a_value
+            # actual update step:
+            self.q_table[agent_vel_index][agent_lane_index][amb_vel_index][amb_lane_index][rel_amb_y_index][
+                action_index] = q_of_s_a_value
 
     '''
         Q                #Q_table. Multi-dimensional np.ndarray, each dimension: either state partial assignment or action (string action -> integer)
@@ -230,7 +234,10 @@ class RLAlgorithm():
         '''
 
     def save_q_table(self, variables_folder_path = VARIABLES_FOLDER):
-        np.save(variables_folder_path+'/Q_TABLE.npy', self.q_table)
+        if(self.test_mode_on):
+            pass  # do not save
+        else:
+            np.save(variables_folder_path+'/Q_TABLE.npy', self.q_table)
 
 
     def load_q_table(self, variables_folder_path = VARIABLES_FOLDER):

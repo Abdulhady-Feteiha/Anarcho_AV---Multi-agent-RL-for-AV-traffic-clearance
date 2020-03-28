@@ -43,7 +43,7 @@ def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
 
     if(RB_RLAlgorithm is None):
         algo_params = q_learning_params  # from Config.py
-        RB_RLAlgorithm = RLAlgorithm(Proudhon, algo_params= algo_params, load_q_table = load_q_table)  # Algorithm for RB Agent
+        RB_RLAlgorithm = RLAlgorithm(Proudhon, algo_params= algo_params, load_q_table = load_q_table, test_mode_on = vis_update_params['test_mode_on'])  # Algorithm for RB Agent
     ## ######################
 
     ########################
@@ -167,6 +167,10 @@ def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
         print('\n')
 
 
+    if(vis_update_params['print_reward_every_episode'] and episode_num % vis_update_params['every_n_episodes'] != 0):
+        print(f'E:{episode_num: <{6}}| END:{step: <{4}} | '
+              f'finalCumReward: ' + str(episode_reward)[:6] + ' ' * max(0, 6 - len(str(episode_reward))) +" | ")
+
     return RB_RLAlgorithm, Proudhon, episode_reward, episode_reward_list
 
 
@@ -177,11 +181,10 @@ if __name__ == "__main__":
 
     options = get_options()
 
-    if options.GUI:
+    if (options.GUI or vis_update_params['test_mode_on']):
         sumoBinary = checkBinary('sumo-gui')
     else:
         sumoBinary = checkBinary('sumo')
-    sumoBinary = checkBinary('sumo-gui')
 
 
     ## ----- ##
@@ -216,11 +219,10 @@ if __name__ == "__main__":
         # 5: Reset environment in preparation for next episode
         environment_for_next_episode.reset()
         # Load XMLs:
-        traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start"])
+        traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start", "--message-log", "--no-step-log"])
         for vehc in vehicles_list:
             vehc.initialize()  # Placed here to set lane change mode ! Important !
         ## -- ##
 
     # Save Q-table after episodes ended:
     Algorithm_for_RL.save_q_table()
-

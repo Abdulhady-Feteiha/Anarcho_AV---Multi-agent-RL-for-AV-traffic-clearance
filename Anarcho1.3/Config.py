@@ -14,12 +14,15 @@ VARIABLES_FOLDER = os.path.join(BASE_PATH, r"Saved Variables")
 # Simulation Variables:
 track_len = 500
 SimTime = 1000.0  # Maximum number of time steps per episode
-max_num_episodes = 1  # Number of training episodes
+max_num_episodes = 50000  # Number of training episodes
 
 # Visual Update Parameters
 vis_update_params = dict()
 vis_update_params['every_n_episodes'] = 1  # Print Episode info every_n_episodes
 vis_update_params['every_n_iters'] = 1  # Print Iteration info every_n_iters inside single episode
+vis_update_params['print_reward_every_episode'] = True
+vis_update_params['test_mode_on'] = True  # If test mode is on, the q_table is loaded and not saved nor updated, gui is on, exploit is used always
+
 
 
 # History Variables:
@@ -36,8 +39,8 @@ q_learning_params['gamma'] = 0.5  # Discounting rate
 q_learning_params['epsilon'] = 1.0  # Exploration rate
 q_learning_params['max_epsilon'] = 1.0  # Exploration probability at start
 q_learning_params['min_epsilon'] = 0.01  # Minimum exploration probability
-q_learning_params['decay_rate'] = 0.0005  # Exponential decay rate for exploration prob
-load_q_table = False
+q_learning_params['decay_rate'] = 0.0001  # Exponential decay rate for exploration prob
+load_q_table = True
 
 # Reward Parameters:
 give_final_reward = False  # bool: if False, no final reward is given. Step by Step reward only is given.
