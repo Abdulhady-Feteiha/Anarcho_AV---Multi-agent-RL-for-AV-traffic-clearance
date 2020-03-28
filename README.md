@@ -15,3 +15,6 @@ Aside from RL model, for more information on other aspects of the project (Mecha
 * **Tasneem Omara**: s-tsneem.omara@zewailcity.edu.eg
 * **Mohamed El-Sayed**: s-mohammedelsayed@zewailcity.edu.eg
 * **Nadine Amr**: s-nadine.amr@zewailcity.edu.eg 
+ 
+
+![ZC](ZC.png)
