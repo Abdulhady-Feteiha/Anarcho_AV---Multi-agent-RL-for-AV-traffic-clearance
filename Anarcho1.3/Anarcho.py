@@ -11,7 +11,7 @@ from Utils.Vehicle import Vehicle
 from Utils.helpers import *
 from RL.SingleAgent import RLAlgorithm
 from Environment.env import env
-
+from Checks import *
 if 'SUMO_HOME' in os.environ:
     tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
     sys.path.append(tools)
@@ -214,6 +214,10 @@ if __name__ == "__main__":
         Algorithm_for_RL, environment_for_next_episode, episode_reward, episode_reward_list = episode(Algorithm_for_RL, environment_for_next_episode, episode_num)
         total_reward_per_episode.append(episode_reward)
         reward_history_per_episode.append(episode_reward_list)
+
+    ##  --  ##
+        if (enable_checks):
+            are_we_ok(environment_for_next_episode)
 
         ## -- ##
         # 5: Reset environment in preparation for next episode

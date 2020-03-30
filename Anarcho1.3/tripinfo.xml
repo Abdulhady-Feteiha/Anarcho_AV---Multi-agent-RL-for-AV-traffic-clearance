@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 03/28/20 03:17:31 by Eclipse SUMO GUI Version v1_5_0+0742-a5dc31a60d
+<!-- generated on 03/30/20 21:49:15 by Eclipse SUMO GUI Version v1_5_0+0833-59242a742f
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
-        <net-file value="D:\Career\GP\RLRep\Anarcho1.3\Sumo_files/Anarcho1.3.net.xml"/>
-        <route-files value="D:\Career\GP\RLRep\Anarcho1.3\Sumo_files/Anarcho1.3.rou.xml"/>
+        <net-file value="F:\10th%20semester%20isa\1%20GP\training_single_agent\Anarcho_AV&#45;&#45;-Multi-agent-RL-for-AV-traffic-clearance\Anarcho1.3\Sumo_files/Anarcho1.3.net.xml"/>
+        <route-files value="F:\10th%20semester%20isa\1%20GP\training_single_agent\Anarcho_AV&#45;&#45;-Multi-agent-RL-for-AV-traffic-clearance\Anarcho1.3\Sumo_files/Anarcho1.3.rou.xml"/>
     </input>
 
     <output>
@@ -29,4 +29,3 @@
 -->
 
 <tripinfos xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/tripinfo_file.xsd">
-</tripinfos>
