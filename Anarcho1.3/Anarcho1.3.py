@@ -220,6 +220,7 @@ if __name__ == "__main__":
         environment_for_next_episode.reset()
         # Load XMLs:
         traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start", "--message-log", "--no-step-log"])
+        # TODO: https://stackoverflow.com/questions/59166732/how-to-disable-print-loading-configuration-done-in-sumo-traci and stop printing termination step number
         for vehc in vehicles_list:
             vehc.initialize()  # Placed here to set lane change mode ! Important !
         ## -- ##
