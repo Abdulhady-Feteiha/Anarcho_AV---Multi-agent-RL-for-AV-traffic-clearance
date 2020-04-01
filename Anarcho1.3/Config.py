@@ -1,6 +1,14 @@
+import random
+
+# Reproducibility:  # Keep at the top
+Sumo_random_seed = 5  # Any number, just fix it through the runs
+Python_random_seed = 0  # Any number, just fix it through the runs
+random.seed(Python_random_seed)
+
+# ----------------------------------------------------- #
+
 import os
 import numpy as np
-import random
 
 # Path Variables:
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -21,7 +29,7 @@ vis_update_params = dict()
 vis_update_params['every_n_episodes'] = 1  # Print Episode info every_n_episodes
 vis_update_params['every_n_iters'] = 1  # Print Iteration info every_n_iters inside single episode
 vis_update_params['print_reward_every_episode'] = True
-vis_update_params['test_mode_on'] = True  # If test mode is on, the q_table is loaded and not saved nor updated, gui is on, exploit is used always
+vis_update_params['test_mode_on'] = False  # If test mode is on, the q_table is loaded and not saved nor updated, gui is on, exploit is used always
 
 
 
@@ -40,11 +48,16 @@ q_learning_params['epsilon'] = 1.0  # Exploration rate
 q_learning_params['max_epsilon'] = 1.0  # Exploration probability at start
 q_learning_params['min_epsilon'] = 0.01  # Minimum exploration probability
 q_learning_params['decay_rate'] = 0.0001  # Exponential decay rate for exploration prob
-load_q_table = True
+load_q_table = False
 
 # Reward Parameters:
 give_final_reward = False  # bool: if False, no final reward is given. Step by Step reward only is given.
 enable_checks = True
+
+
+
+
+
 #Don't forget to initialize SimTime before importing vehicle
 from Utils.Vehicle import Vehicle
 vehicles_list = [Vehicle("LH"), Vehicle("RB")]

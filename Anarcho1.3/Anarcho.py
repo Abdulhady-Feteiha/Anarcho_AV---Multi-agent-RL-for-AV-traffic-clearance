@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from Config import *  # Make sure this is the first one imported, to have random.seed() used before any actual randomness is assigned
 import os
 import sys
 import optparse
@@ -6,7 +7,6 @@ import numpy as np
 from sumolib import checkBinary
 import traci
 from Utils.measure_max_window import measure
-from Config import *
 from Utils.Vehicle import Vehicle
 from Utils.helpers import *
 from RL.SingleAgent import RLAlgorithm
@@ -189,7 +189,7 @@ if __name__ == "__main__":
 
     ## ----- ##
     traci.start([sumoBinary, "-c", Sumocfg_DIR,
-                             "--tripinfo-output", "tripinfo.xml"])
+                             "--tripinfo-output", "tripinfo.xml", "--seed", str(Sumo_random_seed)])
     for vehc in vehicles_list:
         vehc.initialize()
     ## ----- ##
@@ -202,7 +202,7 @@ if __name__ == "__main__":
 
     ## --- ##
     environment_for_next_episode.reset()
-    traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start"])
+    traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start", "--seed", str(Sumo_random_seed)])
     for vehc in vehicles_list:
         vehc.initialize()  # Placed here to set lane change mode ! Important !
     ## --- ##
@@ -223,7 +223,7 @@ if __name__ == "__main__":
         # 5: Reset environment in preparation for next episode
         environment_for_next_episode.reset()
         # Load XMLs:
-        traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start", "--message-log", "--no-step-log"])
+        traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start", "--seed", str(Sumo_random_seed)])
         # TODO: https://stackoverflow.com/questions/59166732/how-to-disable-print-loading-configuration-done-in-sumo-traci and stop printing termination step number
         for vehc in vehicles_list:
             vehc.initialize()  # Placed here to set lane change mode ! Important !
