@@ -44,7 +44,7 @@ load_q_table = True
 
 # Reward Parameters:
 give_final_reward = False  # bool: if False, no final reward is given. Step by Step reward only is given.
-
+enable_checks = True
 #Don't forget to initialize SimTime before importing vehicle
 from Utils.Vehicle import Vehicle
 vehicles_list = [Vehicle("LH"), Vehicle("RB")]
