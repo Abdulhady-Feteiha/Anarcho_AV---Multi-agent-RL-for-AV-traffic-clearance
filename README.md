@@ -11,10 +11,15 @@ For more information on the RL-Sumo model, feel free to contact: <br>
 * **Waleed Awad**: s-wmustafa@zewailcity.edu.eg
 * **Abdulhady Feteiha**: s-abdulhady@zewailcity.edu.eg <br>
 
-Aside from RL model, for more information on other aspects of the project (Mechanics and Robotics, ROS Model), you may refer to our Robotics Heroes: <br>
+A parallel effort is exerted to construct a ROS (Robot operating system) model along with hardware equipped autonomous vehicles. For more information on that part, please refer to our Robotics heroes: <br>
 * **Tasneem Omara**: s-tsneem.omara@zewailcity.edu.eg
 * **Mohamed El-Sayed**: s-mohammedelsayed@zewailcity.edu.eg
 * **Nadine Amr**: s-nadine.amr@zewailcity.edu.eg 
+
+## Requirements <br>
+* The sumo version used is a nightly snapshot of past March 19, 2020. Please refer to sumo for Installation and debugging: https://sumo.dlr.de/docs/Downloads.html#nightly_snapshots <br>
+* to install the required libraries: <br>
+  ` pip install -r ./requirements.txt `
  
 
 ![ZC](ZC.png)
