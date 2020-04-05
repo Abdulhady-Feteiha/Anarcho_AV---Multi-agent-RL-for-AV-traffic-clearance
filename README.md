@@ -16,10 +16,15 @@ A parallel effort is exerted to construct a ROS (Robot operating system) model a
 * **Mohamed El-Sayed**: s-mohammedelsayed@zewailcity.edu.eg
 * **Nadine Amr**: s-nadine.amr@zewailcity.edu.eg 
 
-## Requirements <br>
+# Requirements <br>
 * The sumo version used is a nightly snapshot of past March 19, 2020. Please refer to sumo for Installation and debugging: https://sumo.dlr.de/docs/Downloads.html#nightly_snapshots <br>
 * to install the required libraries: <br>
-  ` pip install -r ./requirements.txt `
- 
+  ` pip install -r ./requirements.txt ` <br>
+# Train and Save a Q table <br>
+`cd Anarcho1.3` <br>
+`python Anarcho.py --Train` <br>
+# Test a saved Q table <br>
+`cd Anarcho1.3` <br>
+`python Anarcho.py --Test` <br>
 
 ![ZC](ZC.png)
