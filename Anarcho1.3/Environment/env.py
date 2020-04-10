@@ -4,7 +4,9 @@ import random
 import traci
 import warnings; do_warn = False
 import jinja2
-
+'''
+environment main functionality :measure state , get feasible actions , calculate reward .
+'''
 class env():
 
     #TODO: Add env.reset(): ||:Changes .rou file to start: from different lane. ||:Changes network file to start from: different distance.

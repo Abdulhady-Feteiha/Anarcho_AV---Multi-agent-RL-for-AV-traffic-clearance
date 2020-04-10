@@ -14,7 +14,7 @@ VARIABLES_FOLDER = os.path.join(BASE_PATH, r"Saved Variables")
 # Simulation Variables:
 track_len = 500
 SimTime = 1000.0  # Maximum number of time steps per episode
-max_num_episodes = 50000  # Number of training episodes
+max_num_episodes = 1000  # Number of training episodes
 
 # Visual Update Parameters
 vis_update_params = dict()
@@ -48,3 +48,6 @@ enable_checks = True
 #Don't forget to initialize SimTime before importing vehicle
 from Utils.Vehicle import Vehicle
 vehicles_list = [Vehicle("LH"), Vehicle("RB")]
+
+# global variables
+step = 0

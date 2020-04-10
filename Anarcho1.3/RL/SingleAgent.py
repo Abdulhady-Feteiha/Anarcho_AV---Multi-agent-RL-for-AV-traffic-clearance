@@ -4,6 +4,9 @@ from Config import *
 
 class RLAlgorithm():
     '''
+    Main functionality is to Pick action , update q-table , isolate it to be able to apply other algorithms with minimum effort and changes .
+    '''
+    '''
     Access order for the Q_table is [agent_vel][agent_lane][amb_vel][amb_lane][rel_amb_y][action].. remember to change the value rel_amb_y to be positive [0,58]
     '''
 
