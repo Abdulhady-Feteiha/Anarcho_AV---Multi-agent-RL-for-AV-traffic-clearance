@@ -1,13 +1,13 @@
 Loading net-file from 'F:\10th semester isa\1 GP\training_single_agent\Anarcho_AV---Multi-agent-RL-for-AV-traffic-clearance\Anarcho1.3\Sumo_files/Anarcho1.3.net.xml' ... done (1ms).
 Loading done.
 Simulation started with time: 0.00
-Simulation ended at time: 49.00
+Simulation ended at time: 0.00
 Performance: 
- Duration: 3330707ms
- Real time factor: 0.0147116
- UPS: 0.029423
+ Duration: 8961808ms
+ Real time factor: 0
+ UPS: 0.000000
 Vehicles: 
- Inserted: 2
- Running: 2
+ Inserted: 0 (Loaded: 2)
+ Running: 0
  Waiting: 0
 

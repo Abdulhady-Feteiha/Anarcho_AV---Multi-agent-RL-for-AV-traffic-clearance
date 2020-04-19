@@ -14,14 +14,14 @@ VARIABLES_FOLDER = os.path.join(BASE_PATH, r"Saved Variables")
 # Simulation Variables:
 track_len = 500
 SimTime = 1000.0  # Maximum number of time steps per episode
-max_num_episodes = 1000  # Number of training episodes
+max_num_episodes = 10000  # Number of training episodes
 
 # Visual Update Parameters
 vis_update_params = dict()
 vis_update_params['every_n_episodes'] = 1  # Print Episode info every_n_episodes
 vis_update_params['every_n_iters'] = 1  # Print Iteration info every_n_iters inside single episode
 vis_update_params['print_reward_every_episode'] = True
-vis_update_params['test_mode_on'] = True  # If test mode is on, the q_table is loaded and not saved nor updated, gui is on, exploit is used always
+vis_update_params['test_mode_on'] = True # If test mode is on, the q_table is loaded and not saved nor updated, gui is on, exploit is used always
 
 
 
@@ -44,6 +44,14 @@ load_q_table = True
 
 # Reward Parameters:
 give_final_reward = False  # bool: if False, no final reward is given. Step by Step reward only is given.
+
+amb_r_w = 1  # ambulance reward weight
+
+agent_acc_r_w = 0.2  # agent according to acceleration  reward weight
+
+agent_chL_r_w = 0.2   # agent according to lane change reward weight
+
+# Checks parameter
 enable_checks = True
 #Don't forget to initialize SimTime before importing vehicle
 from Utils.Vehicle import Vehicle

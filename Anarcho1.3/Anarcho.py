@@ -126,7 +126,7 @@ def episode(RB_RLAlgorithm=None, Proudhon=None, episode_num=0):
                       new_observed_state_for_this_agent)
 
         # 3.4: reward last step's chosen action
-        reward = Proudhon.calc_reward(amb_last_velocity, done, step)
+        reward = Proudhon.calc_reward(amb_last_velocity, done, step,last_observed_state_for_this_agent,new_observed_state_for_this_agent)
         episode_reward += reward  # for history
         episode_reward_list.append(reward)  # for history
 

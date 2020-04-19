@@ -318,7 +318,13 @@ class env():
         # debug#print(f'Feasible actions: ', feasible_actions)
         return feasible_actions
 
-    def calc_reward(self, amb_last_velocity, done, number_of_steps, max_final_reward = 20, min_final_reward = -20, max_step_reward=0, min_step_reward = -1.25):
+    def calc_reward(self, amb_last_velocity, done, number_of_steps,previous_state , current_state,
+                    max_final_reward = 20, min_final_reward = -20, max_step_reward=0, min_step_reward = -1.25,
+                    agent_max_step_reward = 0 ,agent_min_step_reward = -0.625):
+
+
+
+
         # TODO: Fix final reward logic according last discussiion : if agent finishes first, assume the ambulance  will conitnue at its current
         #   velocity till the end.
         '''
@@ -347,6 +353,24 @@ class env():
             return reward
 
         else: #Calcualate a step reward
+            # initializing reward values
+            amb_reward = 0
+            agent_acc_reward = 0
+            agent_chL_reward = 0
+
+            '''
+           ========================== First : is the reward related to ambulance speed change ==========================
+           
+            amb_acc   |     corresponding reward 
+            __________|__________________________
+            2         |     0
+            1         |     -0.3125
+            0         |     -0.625
+           -1         |     -0.9375
+            2         |     -1.25
+           
+            '''
+
             steps_needed_to_halt = 30
             ration_of_halt_steps_to_total_steps = steps_needed_to_halt/track_len
 
@@ -355,14 +379,40 @@ class env():
             m = (max_step_reward - min_step_reward)/(2 * self.emer.max_accel)  # Slope for straight line equation to calculate step reward
             #2 * self.emer.max_accel since: = self.emer.max_accel - * self.emer.max_decel
             c = max_step_reward - self.emer.max_accel * m  # c is y-intercept for the reward function equation #max_step_reward is the y for x = 2 (max acceleration)
-            reward = m * (self.emer.spd - amb_last_velocity) + c
+            amb_reward = m * (self.emer.spd - amb_last_velocity) + c
             #debug#print(f'c: {c}, m: {m}, accel: {(self.emer.spd - amb_last_velocity)}')
 
             if ( abs(amb_last_velocity-self.emer.max_speed) <= 1e-10 ):
             #since ambulance had maximum speed and speed did not change that much; unless we applied the code below.. the acceleration
             #   will be wrongly assumed to be zero. Although the ambulance probably could have accelerated more, but this is its maximum velocity.
-                reward = max_step_reward #same reward as maximum acceleration (+2),
+                amb_reward = max_step_reward #same reward as maximum acceleration (+2),
+            '''
+            ======================= Second : is the reward due to agent speed change===================================
+            
+            # our agent has four main actions acc, no_acc , dec , and lane change 
+            acc has 0 reward , lane change has -0.15625 , no_acc has -0.3125 , and dec has -0.625 
+            
+            '''
+            agent_m=(agent_max_step_reward - agent_min_step_reward)/(2*self.agents[0].max_accel)
+            # it has assumption that max_accel =-1 * max_decel which is not necessarily the case
+            c=agent_max_step_reward-self.agents[0].max_accel *agent_m
+            agent_acc_reward = agent_m * (current_state[0]- previous_state[0] ) +c
 
+            if (abs(previous_state[0]-self.agents[0].max_speed) <= 1e-10) :
+
+                agent_acc_reward = agent_max_step_reward
+
+
+            '''
+            ===================  Third : is  the reward due to agent lane change =======================
+            '''
+
+
+            if (previous_state[1]!=current_state[1]):
+                agent_chL_reward = 0.5*agent_m+c      # 0.5 indicates that lane change is favorable than dec , or no acc
+                # but it is non favorable generally as it has negative reward
+
+            reward = amb_reward *amb_r_w + agent_acc_reward *agent_acc_r_w  +agent_chL_reward*agent_chL_r_w
             self.reward = reward
             return reward
 
