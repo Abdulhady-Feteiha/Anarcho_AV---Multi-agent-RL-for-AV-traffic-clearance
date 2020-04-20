@@ -1,7 +1,7 @@
 import random
 
 # Reproducibility:  # Keep at the top
-Sumo_random_seed = 5  # Any number, just fix it through the runs
+Sumo_random_seed = 5  # Any number, just fix it through the runs #  Input to traci.load() and traci.start()
 Python_random_seed = 0  # Any number, just fix it through the runs
 random.seed(Python_random_seed)
 
@@ -40,7 +40,7 @@ reward_history_per_episode = []  # list of lists
 # Q-learning Parameters:
 q_learning_params = dict()
 q_learning_params['exp_exp_tradeoff'] = random.uniform(0,
-                                                       1)  # TODO: Add random seed to enable replication. #Only keep the exp_exp_tradeoff here.
+                                                       1)  # DONE: Add random seed to enable replication. #Only keep the exp_exp_tradeoff here.
 q_learning_params['learning_rate'] = 0.7  # Learning rate
 q_learning_params['gamma'] = 0.5  # Discounting rate
 # Exploration parameters
