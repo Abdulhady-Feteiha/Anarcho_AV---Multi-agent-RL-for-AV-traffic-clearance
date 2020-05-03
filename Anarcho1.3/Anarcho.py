@@ -38,7 +38,7 @@ def episode(RB_RLAlgorithm = None, Proudhon = None, episode_num = 0):
         Proudhon = env(vehicles_list)  # vehicles_list = [LH, RB]
         ## -- ##
         Proudhon.reset()
-        traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml"])
+        traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--seed", str(Sumo_random_seed)])
         for vehc in vehicles_list:
             vehc.initialize()
         ## -- ##
