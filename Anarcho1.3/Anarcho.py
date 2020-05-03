@@ -21,8 +21,10 @@ else:
 
 def get_options():
     opt_parser = optparse.OptionParser()
-    opt_parser.add_option("--GUI", action="store_true",
-                         default=False, help="run the GUI version of sumo")
+    opt_parser.add_option("--Train", action="store_true",
+                         default=False, help="Train and save a Q table")
+    opt_parser.add_option("--Test", action="store_true",
+                         default=False, help="Test a saved Q table")
     options, args = opt_parser.parse_args()
     return options
 
@@ -181,9 +183,12 @@ if __name__ == "__main__":
 
     options = get_options()
 
-    if (options.GUI or vis_update_params['test_mode_on']):
+    if options.Test:
+        vis_update_params['test_mode_on'] = True
         sumoBinary = checkBinary('sumo-gui')
-    else:
+
+    if options.Train:
+        vis_update_params['test_mode_on'] = False
         sumoBinary = checkBinary('sumo')
 
 
