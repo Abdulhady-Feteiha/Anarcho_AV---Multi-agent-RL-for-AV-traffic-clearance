@@ -27,4 +27,8 @@ A parallel effort is exerted to construct a ROS (Robot operating system) model a
 `cd Anarcho1.3` <br>
 `python Anarcho.py --Test` <br>
 
+
+# Versions Contents:
+Anarcho1.3: Single RL Agent  + One Ambulance Car
+Anarcho1.4: Mutiple Autonomous (Non-RL) Agents + One Ambulance Car
 ![ZC](ZC.png)
