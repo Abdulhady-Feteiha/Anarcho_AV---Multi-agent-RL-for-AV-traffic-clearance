@@ -1,0 +1,24 @@
+<routes>
+
+      <vType id="Emergency" length="2.0" maxSpeed="10.0" sigma="0.0" color='1,0,0' accel = "2.0" decel = "2.0" emergencyDecel="2.0"/>
+      <vType id="Ego" length="2.0" maxSpeed="5.0" sigma="0.0" color='0,0,1' accel = "1.0" decel = "1.0"  emergencyDecel="1.0" />
+
+      <route id="Emer_route" edges="r1 r2"/>
+      <route id="Ego_route" edges="r2"/>
+
+      
+      <vehicle depart="0" id="RB" route="Ego_route" type="Ego" departLane = "0" color="0,0,1"/>
+      <vehicle depart="0" id="RB1" route="Ego_route" type="Ego" departLane = "1" color="0,1,0"/>
+      <vehicle depart="0" id="RB2" route="Ego_route" type="Ego" departLane = "2" color="1,1,1"/>
+      <vehicle depart="0" id="RB3" route="Ego_route" type="Ego" departLane = "0" color="1,1,1" departPos="50"/>
+
+      <vehicle depart="0" departSpeed = "10.0" id="LH" route="Emer_route" type="Emergency" departLane = "{{data.ambulance_start_lane}}"/>
+
+      <!-- depart: Determines the time at which the vehicle enters the network  -->
+      <!-- edges: sequence of routes for vehicle-->
+      <!-- r1L for ego only, -->
+      <!-- more info: https://sumo.dlr.de/docs/Definition_of_Vehicles,_Vehicle_Types,_and_Routes.html#depart -->
+      <!--      <vehicle depart="0" id="RB" route="Ego_route" type="Ego" departLane = "{{data.agent_start_lane}}" />
+-->
+
+</routes>

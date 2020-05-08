@@ -41,24 +41,24 @@
     <location netOffset="0.00,0.00" convBoundary="0.00,0.00,511.00,0.00" origBoundary="-10000000000.00,-10000000000.00,10000000000.00,10000000000.00" projParameter="!"/>
 
     <edge id=":e2_0" function="internal">
-        <lane id=":e2_0_0" index="0" speed="13.89" length="0.10" shape="234,-8.00 234,-8.00"/>
-        <lane id=":e2_0_1" index="1" speed="13.89" length="0.10" shape="234,-4.80 234,-4.80"/>
-        <lane id=":e2_0_2" index="2" speed="13.89" length="0.10" shape="234,-1.60 234,-1.60"/>
+        <lane id=":e2_0_0" index="0" speed="13.89" length="0.10" shape="{{data.r1_new_length}},-8.00 {{data.r1_new_length}},-8.00"/>
+        <lane id=":e2_0_1" index="1" speed="13.89" length="0.10" shape="{{data.r1_new_length}},-4.80 {{data.r1_new_length}},-4.80"/>
+        <lane id=":e2_0_2" index="2" speed="13.89" length="0.10" shape="{{data.r1_new_length}},-1.60 {{data.r1_new_length}},-1.60"/>
     </edge>
 
     <edge id="r1" from="e1" to="e2" priority="-1">
-        <lane id="r1_0" index="0" speed="13.89" length="234" shape="0.00,-8.00 234,-8.00"/>
-        <lane id="r1_1" index="1" speed="13.89" length="234" shape="0.00,-4.80 234,-4.80"/>
-        <lane id="r1_2" index="2" speed="13.89" length="234" shape="0.00,-1.60 234,-1.60"/>
+        <lane id="r1_0" index="0" speed="13.89" length="{{data.r1_new_length}}" shape="0.00,-8.00 {{data.r1_new_length}},-8.00"/>
+        <lane id="r1_1" index="1" speed="13.89" length="{{data.r1_new_length}}" shape="0.00,-4.80 {{data.r1_new_length}},-4.80"/>
+        <lane id="r1_2" index="2" speed="13.89" length="{{data.r1_new_length}}" shape="0.00,-1.60 {{data.r1_new_length}},-1.60"/>
     </edge>
-    <edge id="r2" from="e2" to="e3" priority="-1" length="277">
-        <lane id="r2_0" index="0" speed="13.89" length="277" shape="234,-8.00 500.00,-8.00"/>
-        <lane id="r2_1" index="1" speed="13.89" length="277" shape="234,-4.80 500.00,-4.80"/>
-        <lane id="r2_2" index="2" speed="13.89" length="277" shape="234,-1.60 500.00,-1.60"/>
+    <edge id="r2" from="e2" to="e3" priority="-1" length="{{data.r2_new_length}}">
+        <lane id="r2_0" index="0" speed="13.89" length="{{data.r2_new_length}}" shape="{{data.r1_new_length}},-8.00 500.00,-8.00"/>
+        <lane id="r2_1" index="1" speed="13.89" length="{{data.r2_new_length}}" shape="{{data.r1_new_length}},-4.80 500.00,-4.80"/>
+        <lane id="r2_2" index="2" speed="13.89" length="{{data.r2_new_length}}" shape="{{data.r1_new_length}},-1.60 500.00,-1.60"/>
     </edge>
 
     <junction id="e1" type="dead_end" x="0.00" y="0.00" incLanes="" intLanes="" shape="0.00,0.00 0.00,-9.60"/>
-    <junction id="e2" type="priority" x="100.00" y="0.00" incLanes="r1_0 r1_1 r1_2" intLanes=":e2_0_0 :e2_0_1 :e2_0_2" shape="234,0.00 234,-9.60 234,0.00">
+    <junction id="e2" type="priority" x="100.00" y="0.00" incLanes="r1_0 r1_1 r1_2" intLanes=":e2_0_0 :e2_0_1 :e2_0_2" shape="{{data.r1_new_length}},0.00 {{data.r1_new_length}},-9.60 {{data.r1_new_length}},0.00">
         <request index="0" response="000" foes="000" cont="0"/>
         <request index="1" response="000" foes="000" cont="0"/>
         <request index="2" response="000" foes="000" cont="0"/>
