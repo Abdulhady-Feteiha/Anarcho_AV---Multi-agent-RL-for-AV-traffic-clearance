@@ -23,11 +23,15 @@ class Vehicle:
         Note: __init__() function is called once per code run, but initialize() function is called after each traci.load()
         and traci.start() -- i.e. once every environment restart/reset.
         """
-        traci.vehicle.setLaneChangeMode(self.ID, 512)  # was 512, should it be 256? # Do we, sometimes, request a change, and it ignores it?
+        self.type = traci.vehicle.getTypeID(self.ID)
+        if(self.type=="Emergency"):
+            pass
+        else:
+            traci.vehicle.setLaneChangeMode(self.ID, 512)  # was 512, should it be 256? # Do we, sometimes, request a change, and it ignores it?
         '''To disable all autonomous changing but still handle safety checks in the simulation,
         either one of the modes 256 (collision avoidance) or 512 (collision avoidance and safety-gap enforcement) may be used.
         ref: https://sumo.dlr.de/docs/TraCI/Change_Vehicle_State.html#lane_change_mode_0xb6'''
-        self.type = traci.vehicle.getTypeID(self.ID)
+
         self.max_speed = traci.vehicle.getMaxSpeed(self.ID)
         self.max_accel = traci.vehicle.getAccel(self.ID)
         self.max_decel = traci.vehicle.getDecel(self.ID)

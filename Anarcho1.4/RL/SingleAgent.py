@@ -1,6 +1,6 @@
 import numpy as np
-import random
 from Config import *
+import random
 
 class RLAlgorithm():
     '''

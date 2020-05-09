@@ -8,10 +8,10 @@ from sumolib import checkBinary
 import traci
 from Utils.helpers import *
 from RL.SingleAgent import RLAlgorithm
-from Environment.env import env
-from Checks import *
 
-from Utils.SimTools import SimTools
+from Checks import *
+from Utils.SimTools import *
+from Environment.env import *
 
 
 
@@ -49,48 +49,37 @@ if __name__ == "__main__":
 
 
     ## ----- ##
-    Proudhon = env(vehicles_list)   # env.__init__ and template loading
-    traci.start([sumoBinary, "-c", Sumocfg_DIR,
-                             "--tripinfo-output", "tripinfo.xml", "--seed", str(Sumo_random_seed)])  # SUMO starts
-    for vehc in vehicles_list:  # vehicles initialized
-        vehc.initialize()
-
+    Proudhon = env(vehicles_list, sumoBinary)  # env.__init__ and template loading
     # environment reset inside episode()
     ## ----- ##
 
     episode_num = 0
 
-    Algorithm_for_RL, environment_for_next_episode, episode_reward, episode_reward_list = SimTools.episode(Proudhon=Proudhon)
+    Algorithm_for_RL, environment_for_next_episode, episode_reward, episode_reward_list = SimTools.episode(sumoBinary=sumoBinary, Proudhon=Proudhon)
     # total_reward_per_episode.append(episode_reward)   #RLcomment
     # reward_history_per_episode.append(episode_reward_list) #RLcomment
 
     ## --- ##
-    environment_for_next_episode.reset()
-    traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start", "--seed", str(Sumo_random_seed)])
-    for vehc in vehicles_list:
-        vehc.initialize()  # Placed here to set lane change mode ! Important !
+    environment_for_next_episode.reset(sumoBinary=sumoBinary)
     ## --- ##
 
     while(episode_num < max_num_episodes):
 
         episode_num += 1
 
-        Algorithm_for_RL, environment_for_next_episode, episode_reward, episode_reward_list = SimTools.episode(Algorithm_for_RL, environment_for_next_episode, episode_num)
+        Algorithm_for_RL, environment_for_next_episode, episode_reward, episode_reward_list = \
+            SimTools.episode(sumoBinary=sumoBinary, RB_RLAlgorithm=Algorithm_for_RL, Proudhon=environment_for_next_episode, episode_num=episode_num)
         # total_reward_per_episode.append(episode_reward) #RLcomment
         # reward_history_per_episode.append(episode_reward_list)  #RLcomment
 
-    ##  --  ##
+        ##  --  ##
         if (enable_checks):
             are_we_ok(environment_for_next_episode)
 
         ## -- ##
         # 5: Reset environment in preparation for next episode
-        environment_for_next_episode.reset()
-        # Load XMLs:
-        traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start", "--seed", str(Sumo_random_seed)])
+        environment_for_next_episode.reset(sumoBinary)
         # TODO: https://stackoverflow.com/questions/59166732/how-to-disable-print-loading-configuration-done-in-sumo-traci and stop printing termination step number
-        for vehc in vehicles_list:
-            vehc.initialize()  # Placed here to set lane change mode ! Important !
         ## -- ##
 
     # Save Q-table after episodes ended:

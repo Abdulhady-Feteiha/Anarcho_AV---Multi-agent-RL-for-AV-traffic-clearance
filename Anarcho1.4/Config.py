@@ -1,4 +1,7 @@
 import random
+import os
+
+
 
 # Reproducibility:  # Keep at the top
 Sumo_random_seed = 5  # Any number, just fix it through the runs #  Input to traci.load() and traci.start()
@@ -7,8 +10,7 @@ random.seed(Python_random_seed)
 
 # ----------------------------------------------------- #
 
-import os
-import numpy as np
+
 
 # Path Variables:
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -22,7 +24,7 @@ VARIABLES_FOLDER = os.path.join(BASE_PATH, r"Saved Variables")
 # Simulation Variables:
 track_len = 500
 SimTime = 1000.0  # Maximum number of time steps per episode
-max_num_episodes = 50000  # Number of training episodes
+max_num_episodes = 50  # Number of training episodes
 
 # Visual Update Parameters
 vis_update_params = dict()
@@ -52,7 +54,7 @@ load_q_table = False
 
 # Reward Parameters:
 give_final_reward = False  # bool: if False, no final reward is given. Step by Step reward only is given.
-enable_checks = True
+enable_checks = False
 
 
 
@@ -61,7 +63,10 @@ enable_checks = True
 #Don't forget to initialize SimTime before importing vehicle
 
 from Utils.Vehicle import Vehicle
-vehicles_list = [Vehicle("LH"), Vehicle("RB"), Vehicle("RB1"), Vehicle("RB2"), Vehicle("RB3")]
+vehicles_list = [Vehicle("LH")]  # NOTE: No error will be produced if some cars are not in this list.
+                                 # An error will be produced only when in a not-present ID is requested , Vehicle("RB0"), Vehicle("RB1"), Vehicle("RB2"), Vehicle("RB3")
+vehicles_data = dict()  #dict of of lists. Key: Lane index, value: list of indices for agents in this index
 
-lanes_busyness = [0.5, 0.2, 0.3]  # corresponding to lanes: [0, 1, 2] -- i.e.: [bottom-most lane, middle lane, top-most lane]
-lanes_busyness_mode = 0   # 0 for placing cars at equal distance, 1 for placing cars every (car_length + minGap) with probability = lanes_busyness
+num_lanes = 3
+lanes_busyness = [1.0, 1.0, 1.0]  # corresponding to lanes: [0, 1, 2] -- i.e.: [bottom-most lane, middle lane, top-most lane]
+lanes_busyness_mode = 1  # 0 for placing cars at equal distance, 1 for placing cars every (car_length + minGap + max_speed) with probability = lanes_busyness

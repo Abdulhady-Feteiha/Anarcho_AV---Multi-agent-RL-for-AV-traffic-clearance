@@ -1,59 +1,27 @@
 from Config import *  # Make sure this is the first one imported, to have random.seed() used before any actual randomness is assigned
-from Checks import *
 import traci
 from RL.SingleAgent import RLAlgorithm
 import jinja2  # for templates
+from Environment.env import *
+from Utils.helpers import *
+import sys
+
+
+
 
 class SimTools():
-    @staticmethod
-    def templates_reset():
-        # ---------------------------------------------------------------------------- #
-        #         R A N D O M L Y      I N I T I A L I Z E       X M L s
-        # ---------------------------------------------------------------------------- #
-        new_stance = dict()
-        # 2.1: Init Agent Start Lane
-        new_stance['agent_start_lane'] = random.randint(0,
-                                                        2)  # TODO: edit this to automatically retrieve the number of lanes
-
-        # 2.2: Init Emergency Start Lane
-        new_stance['ambulance_start_lane'] = random.randint(0,
-                                                            2)  # TODO: edit this to automatically retrieve the number of lanes
-
-        # 2.3: Init Agent Start Position
-        new_stance['agent_start_position'] = random.randint(41,
-                                                            250)  # TODO: Edit minimum position to depend on starting position
-        new_stance['r1_new_length'] = new_stance['agent_start_position']
-        new_stance['r2_new_length'] = 511 - new_stance['agent_start_position']
-
-        # 2.4: Load Template to template
-        templateLoader = jinja2.FileSystemLoader(searchpath=TEMPLATES_PATH)
-        templateEnv = jinja2.Environment(loader=templateLoader)
-
-        # 2.5: Put rou template to file
-        rou_template = templateEnv.get_template("route_template.xml")
-        with open(ROUTE_FILE_PATH, "w") as fp:
-            fp.writelines(rou_template.render(data=new_stance))
-
-        # 2.6: Put net template to file:
-        net_template = templateEnv.get_template("net_template.xml")
-        with open(NET_FILE_PATH, "w") as fp:
-            fp.writelines(net_template.render(data=new_stance))
 
     @staticmethod
-    def episode(RB_RLAlgorithm=None, Proudhon=None, episode_num=0):
+    def episode(sumoBinary, RB_RLAlgorithm=None, Proudhon=None, episode_num=0):
         ########################
         # 1 inits
         done = False  # are we done with the episode or not
         step = 0  # step number
         if (Proudhon is None):
-            Proudhon = env(vehicles_list)  # vehicles_list = [LH, RB]
-            ## -- ##
-            traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--seed", str(Sumo_random_seed)])
-            for vehc in vehicles_list:
-                vehc.initialize()
-            ## -- ##
+            Proudhon = env(vehicles_list, sumoBinary)  # vehicles_list = [LH, RB]
 
-        Proudhon.reset()
+
+        # Proudhon.reset()  #TempComment
 
         # if(RB_RLAlgorithm is None): #RLcomment
         #     algo_params = q_learning_params  # from Config.py #RLcomment
@@ -67,7 +35,7 @@ class SimTools():
         Proudhon.get_emer_start_lane()
 
         # (communication from vehicle):
-        getters(Proudhon.list_of_vehicles)  # measure all values from environment
+        getters(Proudhon.list_of_vehicles)  # measure all values from environment (local variable.. since some vehicles exited)
         # (communication to environment):
         Proudhon.measure_full_state()  # measure all values into our agents
         # (communication to algorithm/agent):
@@ -83,11 +51,10 @@ class SimTools():
         ########################
 
         # 3: MAIN LOOP
-        # if (episode_num % vis_update_params['every_n_episodes'] == 0): #TempComment
-        #     print(f'E:{episode_num: <{6}}|S:{0: <{4}} | ' #TempComment
-        #           f'epsilon: {RB_RLAlgorithm.epsilon: <{31}} | ' #TempComment
-        #           f'state: {[str(x)[:5] + " " * max(0, 5 - len(str(x))) for x in Proudhon.observed_state[0]]} |') #TempComment
-
+        if (episode_num % vis_update_params['every_n_episodes'] == 0): #TempComment
+            print(f'E:{episode_num: <{6}}|S:{0: <{4}} | '
+                  f'MaxPossible: {Proudhon.max_possible_cars: <{4}} | '
+                  f'ActualPerLane: { [ vehicles_data[i] for i in range(num_lanes) ] }')
         while traci.simulation.getMinExpectedNumber() > 0:
 
             # 3.1: Store last states
@@ -102,18 +69,16 @@ class SimTools():
             step += 1
 
             # TODO: Turn this into are_we_ok function
-            if (vehicles_list[0].getL() != Proudhon.emer_start_lane):
+            if (vehicles_list[0].getL() != Proudhon.emer_start_lane and enable_checks):
                 raise ValueError(
                     f"Ambulance Changed lane from {Proudhon.emer_start_lane} to {vehicles_list[0].getL()} on step {step}. "
                     f"\nAmbulance Should not change lane. Quitting.")
 
-            # if (step % vis_update_params['every_n_iters'] == 0 and episode_num % vis_update_params['every_n_episodes'] == 0): # print step info   #TempComment
-            #     print(f'E:{episode_num: <{6}}|S:{step: <{4}} | ' #TempComment
-            #           f'reward : {str(Proudhon.reward)[:min(5,len(str(Proudhon.reward)))]: <{5}}, ' #TempComment
-            #           f'lastAction: {chosen_action : <{12}} | '   #TempComment
-            #           f'cumReward: ' + str(episode_reward)[:6] + ' '*max(0, 6 - len(str(episode_reward))) + #TempComment
-            #           f' | state: {[str(x)[:5]+" "*max(0, 5 - len(str(x))) for x in Proudhon.observed_state[0]]}, '  #TempComment
-            #           f'actionMethod: {RB_RLAlgorithm.action_chosing_method : <{14}}')  #TempComment
+            if (step % vis_update_params['every_n_iters'] == 0 and episode_num % vis_update_params['every_n_episodes'] == 0): # print step info   #TempComment
+                print(f'E:{episode_num: <{6}}|S:{step: <{4}} |' #TempComment
+                      f'EmerVel: {fill_str(str(Proudhon.emer.spd), 5)} |'
+                      f'EmerGoalDist: {fill_str(str(Proudhon.amb_goal_dist-Proudhon.emer.lane_pose), 5)} ')
+
             # ----------------------------------------------------------------- #
 
             # 3.3: measurements and if we are done check
@@ -142,17 +107,10 @@ class SimTools():
                         episode_end_reason = "max steps"
                     elif (done == 2):
                         episode_end_reason = "ambulance goal"
-                    elif (done == 3):  # TODO: #TOFIX: What should be the state here?
-                        episode_end_reason = "agent goal"  # TempComment
                     else:
                         raise ValueError(f"Episode: {episode_num} done  is True ={done} but reason not known !")
 
-                    # print(f'E:{episode_num: <{6}}|S:{step: <{4}} | '  #TempComment
-                    #       f'reward : {str(Proudhon.reward)[:min(5, len(str(Proudhon.reward)))]: <{5}}, '  #TempComment
-                    #       f'lastAction: {chosen_action : <{12}} | '  #TempComment
-                    #       f'cumReward: ' + str(episode_reward)[:6] + ' ' * max(0, 6 - len(str(episode_reward))) +  #TempComment
-                    #       f' | state: {[str(x)[:5] + " " * max(0, 5 - len(str(x))) for x in Proudhon.observed_state[0]]}, '  #TempComment
-                    #       f'actionMethod: {RB_RLAlgorithm.action_chosing_method : <{14}}')  #TempComment
+                    print(f'E:{episode_num: <{6}}|EndStep:{step: <{4}}')
                 break
 
                 # 3.7: Actually Choose Action from feasible ones (for next step)
@@ -170,18 +128,14 @@ class SimTools():
         # RB_RLAlgorithm.epsilon = RB_RLAlgorithm.min_epsilon + (RB_RLAlgorithm.max_epsilon - RB_RLAlgorithm.min_epsilon) * \   #RLcomment
         #                         np.exp(-RB_RLAlgorithm.decay_rate * episode_num)  # DONE: Change epsilon to update every episode not every iteration  #RLcomment
 
-        # if (episode_num % vis_update_params['every_n_episodes'] == 0):    #TempComment
-        #     print(f'\n\nE:{episode_num: <{6}}| END:{step: <{4}} | '   #TempComment
-        #           f'finalCumReward: ' + str(episode_reward)[:6] + ' ' * max(0, 6 - len(str(episode_reward))) +" | "   #TempComment
-        #           f'reason: {episode_end_reason: <{15}} | '   #TempComment
-        #           f'old_eps: {old_epsilon: <{10}}, '  #TempComment
-        #           f'new_eps: {RB_RLAlgorithm.epsilon: <{10}}')    #TempComment
-        #     print('-'*157)    #TempComment
-        #     print('=' * 157)  #TempComment
-        #     print('\n')   #TempComment
+        if (episode_num % vis_update_params['every_n_episodes'] == 0):
+            print(f'\n\nE:{episode_num: <{6}}| END:{step: <{4}} |'          
+                  f'reason: {episode_end_reason: <{15}}')
+            print('-'*157)
+            print('=' * 157)
+            print('\n')
 
-        if (vis_update_params['print_reward_every_episode'] and episode_num % vis_update_params[
-            'every_n_episodes'] != 0):
+        if (vis_update_params['print_reward_every_episode'] and episode_num % vis_update_params['every_n_episodes'] != 0):
             print(f'E:{episode_num: <{6}}| END:{step: <{4}} | ')
             #      f'finalCumReward: ' + str(episode_reward)[:6] + ' ' * max(0, 6 - len(str(episode_reward))) +" | ")   #RLcomment
 

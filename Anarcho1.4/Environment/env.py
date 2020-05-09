@@ -1,21 +1,25 @@
-import numpy as np
 from Config import *
+import numpy as np
 import random
 import traci
 import warnings; do_warn = False
-import jinja2
 import copy
+import jinja2
+
+
 
 
 class env():
 
-    def __init__(self, list_of_vehicles, name="MultiAgent1.0",  ambulance_goal_distance=500, rel_amb_y_min = -41, rel_amb_y_max = 16):
+    def __init__(self, list_of_vehicles, sumoBinary, name="MultiAgent1.0",  ambulance_goal_distance=500, rel_amb_y_min = -41, rel_amb_y_max = 16):
+
 
         self.name = name
-        self.list_of_vehicles = copy.copy(list_of_vehicles)  # Note: to copy the list, keeping reference to the original vehicles (as opposed to deepcopy, which would copy vehicles)
         self.amb_goal_dist = ambulance_goal_distance
         self.reward = 0.0
         self.emer_start_lane = None
+        self.emer_car_len = 2.0
+        self.agent_car_len = 2.0
 
         self.rel_amb_y_min = rel_amb_y_min
         self.rel_amb_y_max = rel_amb_y_max
@@ -38,27 +42,159 @@ class env():
 
         self.count_emergency_vehicles = 0  # Temporary assigned variable, reassigned in .reset()->recount_vehicles() to avoid calling a non-initialized vehicle
         self.count_ego_vehicles = 0  # Temporary assigned variable, reassigned in .reset()->recount_vehicles() to avoid calling a non-initialized vehicle
+        # vehicles_data  # dict with: key = lane number, value = number of cars in lane
+        self.max_possible_cars = None   # Maximum possible number of cars in lane give starting position
 
         self.optimal_time = 0   # Temporary assigned variable, reassigned in .reset() to avoid calling a non-initialized vehicle
         self.max_steps = 10000  # Temporary assigned variable, reassigned in .reset() to avoid calling a non-initialized vehicle
 
         # ---------------------------------------------------------------------------- #
         # 2 :        R A N D O M L Y      I N I T I A L I Z E       X M L s
+        #                     and consequently vehicles data
         # ---------------------------------------------------------------------------- #
-        new_stance = dict()
-        # 2.1: Init Agent Start Lane
-        new_stance['agent_start_lane'] = random.randint(0,
-                                                        2)  # TODO: edit this to automatically retrieve the number of lanes
+        self.templates_reset()
+
+        # ---------------------------------------------------------------------------- #
+        # 3 :          I N I T I A T E    S U M O     E N V I R O N M E N T
+        #                             and vehicles list
+        # ---------------------------------------------------------------------------- #
+        traci.start([sumoBinary, "-c", Sumocfg_DIR,
+                     "--tripinfo-output", "tripinfo.xml", "--seed", str(Sumo_random_seed)])  # SUMO starts
+
+        vehicles_list = [Vehicle("LH")]  # NOTE: No error will be produced if some cars are not in this list.
+        # An error will be produced only when in a not-present ID is requested , Vehicle("RB0"), Vehicle("RB1"), Vehicle("RB2"), Vehicle("RB3")
+
+        # Create the real global vehicles list (temporary/fake: initialized one in Config.py with ambulance only):
+        for lane, num_cars in vehicles_data.items():
+            for agent_index in range(num_cars):
+                vehicles_list.append(
+                    Vehicle(env.create_vehicle_id(lane, agent_index))
+                )
+
+        for vehc in vehicles_list:  # vehicles initialized
+            vehc.initialize()
+
+        self.list_of_vehicles = copy.copy(vehicles_list)  # Note: to copy the list, keeping reference to the original vehicles (as opposed to deepcopy, which would copy vehicles)
+        self.recount_vehicles()
+
+    @staticmethod
+    def create_vehicle_id(lane, agent_index, start_chars= "RB" ):
+        return start_chars+"_" + "L" + str(lane) + "I" + str(agent_index)
+
+    def templates_reset(self):
+        """
+        This function is called by env.reset() to reset the XML template contents based on Config.lanes_busyness and
+        Config.lanes_busyness_mode
+
+        :return: None. Just reset the templates.
+        """
+        # ---------------------------------------------------------------------------- #
+        # 2 :        R A N D O M L Y      I N I T I A L I Z E       X M L s
+        # ---------------------------------------------------------------------------- #
+
+        new_stance = dict()  # This is the dict passed to jinja
 
         # 2.2: Init Emergency Start Lane
-        new_stance['ambulance_start_lane'] = random.randint(0,
-                                                            2)  # TODO: edit this to automatically retrieve the number of lanes
+        new_stance['ambulance_start_lane'] = random.randint(0, num_lanes-1)
 
-        # 2.3: Init Agent Start Position
-        new_stance['agent_start_position'] = random.randint(41,
-                                                            250)  # TODO: Edit minimum position to depend on starting position
-        new_stance['r1_new_length'] = new_stance['agent_start_position']
-        new_stance['r2_new_length'] = 511 - new_stance['agent_start_position']
+        new_stance['all_agents_start_position'] = random.randint(41, 250)  # TODO: Edit minimum position to depend on starting position
+        new_stance['r1_new_length'] = new_stance['all_agents_start_position']
+        new_stance['r2_new_length'] = 511 - new_stance['all_agents_start_position']
+
+        new_stance['agent_min_gap'] = 2.5  # default
+        new_stance['ambulance_min_gap'] = 2.5  # default
+
+        new_stance['car_length'] = 2.0
+
+        new_stance['agents_data_dicts'] = []
+
+        distance_to_finish = self.amb_goal_dist - 10 - 1 - new_stance['all_agents_start_position']  # 10 = self.emer.max_speed
+
+        max_cars_per_lane =  np.floor( distance_to_finish/         # According to this distance (changes in every reset)
+                                       (new_stance['agent_min_gap'] + new_stance['car_length']
+                                        + 5 ))  # 5 because it is the max agent velocity    #TODO: Do we have to add 5 ?
+        self.max_possible_cars = max_cars_per_lane
+
+        for lane in range(num_lanes):   # [0, 1, 2] for num_lanes = 3
+            # ------------------------------------------------------------------- #
+            # 1 :     C A R S    A T    E Q U A L    D I S T A N C E S
+            # ------------------------------------------------------------------- #
+
+            if lanes_busyness_mode == 0:  # i.e. place cars at equal distances
+                cars_in_this_lane = int(max_cars_per_lane * lanes_busyness[lane])
+                agent_index = 0
+                distance_between_cars = distance_to_finish/cars_in_this_lane
+                for car in range(cars_in_this_lane):
+
+                    temp_dict = dict()  # agent_data temporary dict to be stored in new_stance['agents_data_dicts']
+
+                    temp_dict['agent_id'] = self.create_vehicle_id(lane, agent_index) # "RB_" + "L" + str(lane) + "I" + str(agent_index)
+
+                    # 2.1: Init Agent Start Lane
+                    temp_dict['agent_start_lane'] = lane
+
+                    # 2.3: Init Agent Start Position
+                    temp_dict['departPos'] = distance_to_finish - agent_index * distance_between_cars
+                    # random.randint(0, 511 - new_stance['all_agents_start_position'])  # distance infront of all_agents_start_position
+
+
+                    new_stance['agents_data_dicts'].append(temp_dict)
+                    agent_index += 1
+                vehicles_data[lane] = agent_index  # number of cars in this lane
+
+            # ------------------------------------------------------------------- #
+            # 2 :  C A R S    P R O D U C E D   W I T H   P R O B A B I L I T Y
+            # ------------------------------------------------------------------- #
+
+            elif lanes_busyness_mode == 1:  # i.e. place cars at equal distances
+                # cars_in_this_lane = int(max_cars_per_lane * lanes_busyness[lane])
+                agent_index = 0
+                real_agent_index = 0  # That gets updated only if we actually add the vehicle
+                min_distance_between_cars =(new_stance['agent_min_gap']   # According to this distance (changes in every reset)
+                                        + new_stance['car_length']
+                                        + 5 )
+                for car in range(int(max_cars_per_lane)):
+
+                    temp_dict = dict()  # agent_data temporary dict to be stored in new_stance['agents_data_dicts']
+
+                    temp_dict['agent_id'] = self.create_vehicle_id(lane, real_agent_index)  # "RB_" + "L" + str(lane) + "I" + str(real_agent_index)
+
+                    # 2.1: Init Agent Start Lane
+                    temp_dict['agent_start_lane'] = lane
+
+                    # 2.3: Init Agent Start Position
+                    temp_dict['departPos'] = distance_to_finish - agent_index * min_distance_between_cars
+                    # random.randint(0, 511 - new_stance['all_agents_start_position'])  # distance infront of all_agents_start_position
+
+                    # Do we add this car ?
+                    add_this_car = random.random()
+                    if add_this_car < lanes_busyness[lane]:
+                        new_stance['agents_data_dicts'].append(temp_dict)
+                        real_agent_index += 1
+
+                    agent_index += 1
+
+                vehicles_data[lane] = real_agent_index   # number of cars in this lane
+
+
+
+
+
+
+
+        # for agent_index in range(int(max_cars_per_lane)):
+        #     temp_dict = dict()  # agent_data temporary dict to be stored in new_stance['agents_data_dicts']
+        #
+        #     temp_dict['agent_id'] = agent_index
+        #
+        #     # 2.1: Init Agent Start Lane
+        #     temp_dict['agent_start_lane'] = random.randint(0, num_lanes-1)
+        #
+        #     # 2.3: Init Agent Start Position
+        #     temp_dict['departPos'] = random.randint(0, 511 - new_stance['all_agents_start_position'])  # distance infront of all_agents_start_position
+        #
+        #     new_stance['agents_data_dicts'].append(temp_dict)
+
 
         # 2.4: Load Template to template
         templateLoader = jinja2.FileSystemLoader(searchpath=TEMPLATES_PATH)
@@ -74,8 +210,7 @@ class env():
         with open(NET_FILE_PATH, "w") as fp:
             fp.writelines(net_template.render(data=new_stance))
 
-
-    def reset(self):
+    def reset(self, sumoBinary):
         '''
         :function: Resets variables necessary to start next training episode, and reloads randomly initialized next episode XML files.
         :return: None, but resets environment
@@ -92,7 +227,6 @@ class env():
         # ------------------------------------------------------------------- #
 
         # self.name = self.name
-        self.list_of_vehicles = copy.copy(vehicles_list)
         # self.amb_goal_dist = self.amb_goal_dist
         self.reward = 0.0
         self.emer_start_lane = None
@@ -100,7 +234,7 @@ class env():
         # self.rel_amb_y_min = self.rel_amb_y_min
         # self.rel_amb_y_max = self.rel_amb_y_max
 
-        self.recount_vehicles()
+
         # self.count_emergency_vehicles = self.count_emergency_vehicles
         # self.count_ego_vehicles = self.count_ego_vehicles
         # self.agents = self.agents
@@ -123,31 +257,36 @@ class env():
         # ---------------------------------------------------------------------------- #
         # 2 :        R A N D O M L Y      I N I T I A L I Z E       X M L s
         # ---------------------------------------------------------------------------- #
-        new_stance = dict()
-        # 2.1: Init Agent Start Lane
-        new_stance['agent_start_lane'] = random.randint(0, 2)  # TODO: edit this to automatically retrieve the number of lanes
+        self.templates_reset()  # Vehicles list gets reset here
 
-        # 2.2: Init Emergency Start Lane
-        new_stance['ambulance_start_lane'] = random.randint(0, 2)  # TODO: edit this to automatically retrieve the number of lanes
+        # ---------------------------------------------------------------------------- #
+        # 3 :          I N I T I A T E    S U M O     E N V I R O N M E N T
+        #                             and vehicles list
+        # ---------------------------------------------------------------------------- #
+        traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml",
+                    "--start", "--seed", str(Sumo_random_seed)])
 
-        # 2.3: Init Agent Start Position
-        new_stance['agent_start_position'] = random.randint(41, 250)  # TODO: Edit minimum position to depend on starting position
-        new_stance['r1_new_length'] = new_stance['agent_start_position']
-        new_stance['r2_new_length'] = 511 - new_stance['agent_start_position']
+        # Create the real global vehicles list (temporary/fake: initialized one in Config.py with ambulance only):
 
-        # 2.4: Load Template to template
-        templateLoader = jinja2.FileSystemLoader(searchpath = TEMPLATES_PATH)
-        templateEnv = jinja2.Environment(loader=templateLoader)
+        vehicles_list = [Vehicle("LH")]  # NOTE: No error will be produced if some cars are not in this list.
+        # An error will be produced only when in a not-present ID is requested , Vehicle("RB0"), Vehicle("RB1"), Vehicle("RB2"), Vehicle("RB3")
 
-        # 2.5: Put rou template to file
-        rou_template = templateEnv.get_template("route_template.xml")
-        with open(ROUTE_FILE_PATH, "w") as fp:
-            fp.writelines(rou_template.render(data=new_stance))
 
-        # 2.6: Put net template to file:
-        net_template = templateEnv.get_template("net_template.xml")
-        with open(NET_FILE_PATH, "w") as fp:
-            fp.writelines(net_template.render(data=new_stance))
+        for lane, num_cars in vehicles_data.items():
+            for agent_index in range(num_cars):
+                vehicles_list.append(
+                    Vehicle(env.create_vehicle_id(lane, agent_index))
+                )
+
+        for vehc in vehicles_list:  # vehicles initialized
+            vehc.initialize()
+
+        self.list_of_vehicles = copy.copy(
+            vehicles_list)  # Note: to copy the list, keeping reference to the original vehicles (as opposed to deepcopy, which would copy vehicles)
+        self.recount_vehicles()
+
+
+
 
     def get_emer_start_lane(self):  # Called at beginning of episode only
         self.emer_start_lane = self.emer.getL()
@@ -237,7 +376,7 @@ class env():
                                                             # hidden_state shape: [ agent_abs_y ... for vehicle in vehicles , amb_abs_y]
             if (agent_abs_y > self.amb_goal_dist - self.emer.max_speed - 1):
                 # Delete element (so that it won't be referred to, again) and just continue
-                print(f'Removing {self.list_of_vehicles[agent_index+1].ID} ...')    # Why plus one (as opposed to just agent_index)?:: because ambulance is vehicles_list[0]
+                # print(f'Removing {self.list_of_vehicles[agent_index+1].ID} ...')    # Why plus one (as opposed to just agent_index)?:: because ambulance is vehicles_list[0]
                 elements_to_remove.append(self.list_of_vehicles[agent_index+1])
                 # return 3
 
@@ -246,9 +385,9 @@ class env():
                 self.list_of_vehicles.remove(agent)
             self.recount_vehicles()
 
-        print("-------------------------------------------------------------------")
-        print("Local list:", [agent.ID for agent in  self.list_of_vehicles])
-        print("Global list:", [agent.ID for agent in vehicles_list])
+        # print("-------------------------------------------------------------------")
+        # print("Local list:", [agent.ID for agent in  self.list_of_vehicles])
+        # print("Global list:", [agent.ID for agent in vehicles_list])
 
         # 0: not done
         return 0
@@ -371,7 +510,7 @@ class env():
         # debug#print(f'Feasible actions: ', feasible_actions)
         return feasible_actions
 
-    def calc_reward(self, amb_last_velocity, done, number_of_steps, max_final_reward = 20, min_final_reward = -20, max_step_reward=0, min_step_reward = -1.25):
+    def calc_reward(self, amb_last_velocity, done, number_of_steps, max_final_reward=20, min_final_reward=-20, max_step_reward=0, min_step_reward = -1.25):
         # TODO: Fix final reward logic according last discussiion : if agent finishes first, assume the ambulance  will conitnue at its current
         #   velocity till the end.
         '''
