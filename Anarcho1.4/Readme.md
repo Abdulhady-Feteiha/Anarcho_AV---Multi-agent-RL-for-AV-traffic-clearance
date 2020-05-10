@@ -1,3 +1,5 @@
+I (Waleed) used this document while working.
+
 # Problems to solve:
 - Insertion of cars -- where ? :: answer: probably after length + gap (mingap) from last vehicle?
 - vehicles list must be updated after every step (and initialized?:: only if new vehicle)
