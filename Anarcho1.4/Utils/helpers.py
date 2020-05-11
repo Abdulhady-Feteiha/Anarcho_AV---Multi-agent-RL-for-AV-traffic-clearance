@@ -4,7 +4,7 @@ def getters(vs):
     for v in vs:
         try:
             v.getSpd()
-            v.getRoute() #Note: getRoute must always be called before getPose
+            v.getRoute() #Note: getRoute must always be called before getPose -- Not since version 1.3
             v.getPose()
             v.getAcc()
             v.getL()

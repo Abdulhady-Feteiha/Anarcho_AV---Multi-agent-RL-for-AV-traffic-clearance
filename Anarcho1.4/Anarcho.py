@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
 
     ## ----- ##
-    Proudhon = env(vehicles_list, sumoBinary)  # env.__init__ and template loading
+    Proudhon = env(sumoBinary=sumoBinary)  # env.__init__ and template loading
     # environment reset inside episode()
     ## ----- ##
 

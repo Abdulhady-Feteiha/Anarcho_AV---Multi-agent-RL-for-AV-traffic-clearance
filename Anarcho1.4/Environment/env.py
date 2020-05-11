@@ -11,7 +11,7 @@ import jinja2
 
 class env():
 
-    def __init__(self, list_of_vehicles, sumoBinary, name="MultiAgent1.0",  ambulance_goal_distance=500, rel_amb_y_min = -41, rel_amb_y_max = 16):
+    def __init__(self, sumoBinary, name="MultiAgent1.0",  ambulance_goal_distance=500, rel_amb_y_min = -41, rel_amb_y_max = 16):
 
 
         self.name = name

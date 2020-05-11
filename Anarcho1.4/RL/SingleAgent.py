@@ -13,7 +13,7 @@ class RLAlgorithm():
         :param environment:  of class env, contains list of vehicles and observations.
         :param name:         string, currently not used except for display purposes
         '''
-        self.name = name #Useless now in 1.3
+        self.name = name #Useless now in 1.4
         self.test_mode_on = test_mode_on
 
         self.environment = environment

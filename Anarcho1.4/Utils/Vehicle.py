@@ -79,7 +79,7 @@ class Vehicle:
         #debug#print(f'Compare {self.lane_pose}, {traci.vehicle.getPosition(self.ID)}') #found to be equal
         return self.lane_pose
 
-    def getAcc(self):  # ROS #currently not used except in getters -> nothing depends on it in 1.3
+    def getAcc(self):  # ROS #currently not used except in getters -> nothing depends on it till version 1.4
         """
         :return: Returns the acceleration in m/s^2 of the named vehicle within the last step.
         """
@@ -138,3 +138,4 @@ class Vehicle:
 
     def __str__(self):
         return f"VehicleObjectWithID={self.ID}"
+

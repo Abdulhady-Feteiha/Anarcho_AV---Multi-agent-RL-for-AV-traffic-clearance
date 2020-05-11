@@ -14,10 +14,10 @@ random.seed(Python_random_seed)
 
 # Path Variables:
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
-Sumocfg_DIR = os.path.join(BASE_PATH, r"Sumo_files/Anarcho1.3.sumocfg")
+Sumocfg_DIR = os.path.join(BASE_PATH, r"Sumo_files/Anarcho1.4.sumocfg")
 TEMPLATES_PATH = os.path.join(BASE_PATH, r"Templates")
-NET_FILE_PATH = os.path.join(BASE_PATH, r"Sumo_files\Anarcho1.3.net.xml")
-ROUTE_FILE_PATH = os.path.join(BASE_PATH, r"Sumo_files\Anarcho1.3.rou.xml")
+NET_FILE_PATH = os.path.join(BASE_PATH, r"Sumo_files\Anarcho1.4.net.xml")
+ROUTE_FILE_PATH = os.path.join(BASE_PATH, r"Sumo_files\Anarcho1.4.rou.xml")
 VARIABLES_FOLDER = os.path.join(BASE_PATH, r"Saved Variables")
 
 
@@ -68,5 +68,5 @@ vehicles_list = [Vehicle("LH")]  # NOTE: No error will be produced if some cars 
 vehicles_data = dict()  #dict of of lists. Key: Lane index, value: list of indices for agents in this index
 
 num_lanes = 3
-lanes_busyness = [1.0, 1.0, 1.0]  # corresponding to lanes: [0, 1, 2] -- i.e.: [bottom-most lane, middle lane, top-most lane]
+lanes_busyness = [0.5, 0.5, 0.5]  # corresponding to lanes: [0, 1, 2] -- i.e.: [bottom-most lane, middle lane, top-most lane]
 lanes_busyness_mode = 1  # 0 for placing cars at equal distance, 1 for placing cars every (car_length + minGap + max_speed) with probability = lanes_busyness

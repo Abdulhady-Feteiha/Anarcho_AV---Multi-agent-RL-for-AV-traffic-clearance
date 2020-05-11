@@ -1,0 +1,107 @@
+<routes>
+
+      <vType id="Emergency" minGap="2.5" length="2.0" maxSpeed="10.0" sigma="0.0" color='1,0,0' accel = "2.0" decel = "2.0" emergencyDecel="2.0"/>
+      <vType id="Ego" minGap="2.5" length="2.0" maxSpeed="5.0" sigma="0.0" color='0,0,1' accel = "1.0" decel = "1.0"  emergencyDecel="1.0" />
+
+      <route id="Emer_route" edges="r1 r2"/>
+      <route id="Ego_route" edges="r2"/>
+
+      
+      <vehicle depart="0" departSpeed = "10.0" id="LH" route="Emer_route" type="Emergency" departLane = "1"/>
+
+        
+      <vehicle depart="0" id="RB_L0I0" route="Ego_route" type="Ego" departLane = "0" color="1,1,1" departPos="303.0"/>      
+        
+      <vehicle depart="0" id="RB_L0I1" route="Ego_route" type="Ego" departLane = "0" color="1,1,1" departPos="284.0"/>      
+        
+      <vehicle depart="0" id="RB_L0I2" route="Ego_route" type="Ego" departLane = "0" color="1,1,1" departPos="246.0"/>      
+        
+      <vehicle depart="0" id="RB_L0I3" route="Ego_route" type="Ego" departLane = "0" color="1,1,1" departPos="236.5"/>      
+        
+      <vehicle depart="0" id="RB_L0I4" route="Ego_route" type="Ego" departLane = "0" color="1,1,1" departPos="227.0"/>      
+        
+      <vehicle depart="0" id="RB_L0I5" route="Ego_route" type="Ego" departLane = "0" color="1,1,1" departPos="217.5"/>      
+        
+      <vehicle depart="0" id="RB_L0I6" route="Ego_route" type="Ego" departLane = "0" color="1,1,1" departPos="179.5"/>      
+        
+      <vehicle depart="0" id="RB_L0I7" route="Ego_route" type="Ego" departLane = "0" color="1,1,1" departPos="160.5"/>      
+        
+      <vehicle depart="0" id="RB_L0I8" route="Ego_route" type="Ego" departLane = "0" color="1,1,1" departPos="141.5"/>      
+        
+      <vehicle depart="0" id="RB_L0I9" route="Ego_route" type="Ego" departLane = "0" color="1,1,1" departPos="132.0"/>      
+        
+      <vehicle depart="0" id="RB_L0I10" route="Ego_route" type="Ego" departLane = "0" color="1,1,1" departPos="56.0"/>      
+        
+      <vehicle depart="0" id="RB_L0I11" route="Ego_route" type="Ego" departLane = "0" color="1,1,1" departPos="18.0"/>      
+        
+      <vehicle depart="0" id="RB_L1I0" route="Ego_route" type="Ego" departLane = "1" color="1,1,1" departPos="303.0"/>      
+        
+      <vehicle depart="0" id="RB_L1I1" route="Ego_route" type="Ego" departLane = "1" color="1,1,1" departPos="293.5"/>      
+        
+      <vehicle depart="0" id="RB_L1I2" route="Ego_route" type="Ego" departLane = "1" color="1,1,1" departPos="284.0"/>      
+        
+      <vehicle depart="0" id="RB_L1I3" route="Ego_route" type="Ego" departLane = "1" color="1,1,1" departPos="274.5"/>      
+        
+      <vehicle depart="0" id="RB_L1I4" route="Ego_route" type="Ego" departLane = "1" color="1,1,1" departPos="265.0"/>      
+        
+      <vehicle depart="0" id="RB_L1I5" route="Ego_route" type="Ego" departLane = "1" color="1,1,1" departPos="246.0"/>      
+        
+      <vehicle depart="0" id="RB_L1I6" route="Ego_route" type="Ego" departLane = "1" color="1,1,1" departPos="236.5"/>      
+        
+      <vehicle depart="0" id="RB_L1I7" route="Ego_route" type="Ego" departLane = "1" color="1,1,1" departPos="227.0"/>      
+        
+      <vehicle depart="0" id="RB_L1I8" route="Ego_route" type="Ego" departLane = "1" color="1,1,1" departPos="208.0"/>      
+        
+      <vehicle depart="0" id="RB_L1I9" route="Ego_route" type="Ego" departLane = "1" color="1,1,1" departPos="198.5"/>      
+        
+      <vehicle depart="0" id="RB_L1I10" route="Ego_route" type="Ego" departLane = "1" color="1,1,1" departPos="189.0"/>      
+        
+      <vehicle depart="0" id="RB_L1I11" route="Ego_route" type="Ego" departLane = "1" color="1,1,1" departPos="141.5"/>      
+        
+      <vehicle depart="0" id="RB_L1I12" route="Ego_route" type="Ego" departLane = "1" color="1,1,1" departPos="113.0"/>      
+        
+      <vehicle depart="0" id="RB_L1I13" route="Ego_route" type="Ego" departLane = "1" color="1,1,1" departPos="103.5"/>      
+        
+      <vehicle depart="0" id="RB_L1I14" route="Ego_route" type="Ego" departLane = "1" color="1,1,1" departPos="84.5"/>      
+        
+      <vehicle depart="0" id="RB_L1I15" route="Ego_route" type="Ego" departLane = "1" color="1,1,1" departPos="27.5"/>      
+        
+      <vehicle depart="0" id="RB_L1I16" route="Ego_route" type="Ego" departLane = "1" color="1,1,1" departPos="18.0"/>      
+        
+      <vehicle depart="0" id="RB_L2I0" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="303.0"/>      
+        
+      <vehicle depart="0" id="RB_L2I1" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="274.5"/>      
+        
+      <vehicle depart="0" id="RB_L2I2" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="265.0"/>      
+        
+      <vehicle depart="0" id="RB_L2I3" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="255.5"/>      
+        
+      <vehicle depart="0" id="RB_L2I4" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="246.0"/>      
+        
+      <vehicle depart="0" id="RB_L2I5" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="189.0"/>      
+        
+      <vehicle depart="0" id="RB_L2I6" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="170.0"/>      
+        
+      <vehicle depart="0" id="RB_L2I7" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="160.5"/>      
+        
+      <vehicle depart="0" id="RB_L2I8" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="151.0"/>      
+        
+      <vehicle depart="0" id="RB_L2I9" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="141.5"/>      
+        
+      <vehicle depart="0" id="RB_L2I10" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="75.0"/>      
+        
+      <vehicle depart="0" id="RB_L2I11" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="46.5"/>      
+        
+      <vehicle depart="0" id="RB_L2I12" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="37.0"/>      
+        
+      <vehicle depart="0" id="RB_L2I13" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="27.5"/>      
+      
+
+      <!-- depart: Determines the time at which the vehicle enters the network  -->
+      <!-- edges: sequence of routes for vehicle-->
+      <!-- r1L for ego only, -->
+      <!-- more info: https://sumo.dlr.de/docs/Definition_of_Vehicles,_Vehicle_Types,_and_Routes.html#depart -->
+      <!--      <vehicle depart="0" id="RB" route="Ego_route" type="Ego" departLane = "" />
+-->
+
+</routes>

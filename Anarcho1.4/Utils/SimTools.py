@@ -18,7 +18,7 @@ class SimTools():
         done = False  # are we done with the episode or not
         step = 0  # step number
         if (Proudhon is None):
-            Proudhon = env(vehicles_list, sumoBinary)  # vehicles_list = [LH, RB]
+            Proudhon = env(sumoBinary=sumoBinary)
 
 
         # Proudhon.reset()  #TempComment
@@ -42,9 +42,9 @@ class SimTools():
         # new_observed_state_for_this_agent = Proudhon.observed_state[0]    #RLcomment
 
         # Chose Action from Feasible Actions:
-        # feasible_actions_for_current_state = Proudhon.get_feasible_actions(vehicles_list[1]) #RLcomment
+        # feasible_actions_for_current_state = Proudhon.get_feasible_actions(Proudhon.list_of_vehicles[1]) #RLcomment
         # chosen_action = RB_RLAlgorithm.pickAction(feasible_actions_for_current_state, new_observed_state_for_this_agent) #RLcomment
-        # RB_RLAlgorithm.applyAction(chosen_action, vehicles_list[1])  # Request Action on Agent #RLcomment
+        # RB_RLAlgorithm.applyAction(chosen_action, Proudhon.list_of_vehicles[1])  # Request Action on Agent #RLcomment
 
         # episode_reward = 0    #RLcomment
         # episode_reward_list = []  #RLcomment
@@ -54,7 +54,8 @@ class SimTools():
         if (episode_num % vis_update_params['every_n_episodes'] == 0): #TempComment
             print(f'E:{episode_num: <{6}}|S:{0: <{4}} | '
                   f'MaxPossible: {Proudhon.max_possible_cars: <{4}} | '
-                  f'ActualPerLane: { [ vehicles_data[i] for i in range(num_lanes) ] }')
+                  f'ActualPerLane: { [ vehicles_data[i] for i in range(num_lanes) ] } |'
+                  f'NumVehicles: {fill_str(str(len(Proudhon.list_of_vehicles)), 5)}')
         while traci.simulation.getMinExpectedNumber() > 0:
 
             # 3.1: Store last states
@@ -69,15 +70,16 @@ class SimTools():
             step += 1
 
             # TODO: Turn this into are_we_ok function
-            if (vehicles_list[0].getL() != Proudhon.emer_start_lane and enable_checks):
+            if (Proudhon.list_of_vehicles[0].getL() != Proudhon.emer_start_lane and enable_checks):
                 raise ValueError(
-                    f"Ambulance Changed lane from {Proudhon.emer_start_lane} to {vehicles_list[0].getL()} on step {step}. "
+                    f"Ambulance Changed lane from {Proudhon.emer_start_lane} to {Proudhon.list_of_vehicles[0].getL()} on step {step}. "
                     f"\nAmbulance Should not change lane. Quitting.")
 
             if (step % vis_update_params['every_n_iters'] == 0 and episode_num % vis_update_params['every_n_episodes'] == 0): # print step info   #TempComment
                 print(f'E:{episode_num: <{6}}|S:{step: <{4}} |' #TempComment
                       f'EmerVel: {fill_str(str(Proudhon.emer.spd), 5)} |'
-                      f'EmerGoalDist: {fill_str(str(Proudhon.amb_goal_dist-Proudhon.emer.lane_pose), 5)} ')
+                      f'EmerGoalDist: {fill_str(str(Proudhon.amb_goal_dist-Proudhon.emer.lane_pose), 5)} |'
+                      f'NumVehicles: {fill_str(str(len(Proudhon.list_of_vehicles)), 5)}')
 
             # ----------------------------------------------------------------- #
 
@@ -94,7 +96,7 @@ class SimTools():
             # episode_reward_list.append(reward)  # for history #RLcomment
 
             # 3.6: Feasibility check for current_state (for next step)
-            # feasible_actions_for_current_state = Proudhon.get_feasible_actions(vehicles_list[1]) #RLcomment
+            # feasible_actions_for_current_state = Proudhon.get_feasible_actions(Proudhon.list_of_vehicles[1]) #RLcomment
 
             # 3.5: update q table using backward reward logic
             # RB_RLAlgorithm.update_q_table(chosen_action, reward, new_observed_state_for_this_agent,  #RLcomment
@@ -118,7 +120,7 @@ class SimTools():
 
             # 3.8: Request environment to apply new action (Request action on Agent for next step)
             # Action is still not applied here, but on #3.2
-            # RB_RLAlgorithm.applyAction(chosen_action, vehicles_list[1])   #RLcomment
+            # RB_RLAlgorithm.applyAction(chosen_action, Proudhon.list_of_vehicles[1])   #RLcomment
 
         # Episode end
         sys.stdout.flush()

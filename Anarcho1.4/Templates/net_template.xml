@@ -4,11 +4,11 @@
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
 
     <input>
-        <sumo-net-file value="D:\Career\GP\RLRep\Anarcho1.3\Sumo_files\Anarcho1.3.net.xml"/>
+        <sumo-net-file value="D:\Career\GP\RLRep\Anarcho1.4\Sumo_files\Anarcho1.4.net.xml"/>
     </input>
 
     <output>
-        <output-file value="D:\Career\GP\RLRep\Anarcho1.3\Sumo_files\Anarcho1.3.net.xml"/>
+        <output-file value="D:\Career\GP\RLRep\Anarcho1.4\Sumo_files\Anarcho1.4.net.xml"/>
     </output>
 
     <processing>
