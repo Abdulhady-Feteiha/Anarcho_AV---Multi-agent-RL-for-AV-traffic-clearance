@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 05/08/20 05:25:08 by Eclipse SUMO GUI Version v1_5_0+0742-a5dc31a60d
+<!-- generated on Thu May 21 00:44:05 2020 by Eclipse SUMO GUI Version UNKNOWN
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
-        <net-file value="D:\Career\GP\RLRep\Anarcho1.3\Sumo_files/Anarcho1.3.net.xml"/>
-        <route-files value="D:\Career\GP\RLRep\Anarcho1.3\Sumo_files/Anarcho1.3.rou.xml"/>
+        <net-file value="/Users/Abdulhady/Desktop/GP/Anarcho_AV/Anarcho_AV&#45;&#45;-Multi-agent-RL-for-AV-traffic-clearance/Anarcho1.3/Sumo_files/Anarcho1.3.net.xml"/>
+        <route-files value="/Users/Abdulhady/Desktop/GP/Anarcho_AV/Anarcho_AV&#45;&#45;-Multi-agent-RL-for-AV-traffic-clearance/Anarcho1.3/Sumo_files/Anarcho1.3.rou.xml"/>
     </input>
 
     <output>
@@ -20,10 +20,6 @@
     <random_number>
         <seed value="5"/>
     </random_number>
-
-    <gui_only>
-        <start value="true"/>
-    </gui_only>
 
 </configuration>
 -->

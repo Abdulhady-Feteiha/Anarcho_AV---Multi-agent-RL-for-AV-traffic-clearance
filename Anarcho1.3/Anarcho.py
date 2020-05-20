@@ -187,11 +187,13 @@ if __name__ == "__main__":
         vis_update_params['test_mode_on'] = True
         sumoBinary = checkBinary('sumo-gui')
 
-    if options.Train:
+    elif options.Train:
         vis_update_params['test_mode_on'] = False
         sumoBinary = checkBinary('sumo')
-
-
+    else:
+        print("Initizlizing Test mood as default")
+        vis_update_params['test_mode_on'] = True
+        sumoBinary = checkBinary('sumo-gui')
     ## ----- ##
     traci.start([sumoBinary, "-c", Sumocfg_DIR,
                              "--tripinfo-output", "tripinfo.xml", "--seed", str(Sumo_random_seed)])
