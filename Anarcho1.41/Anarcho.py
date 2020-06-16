@@ -46,7 +46,10 @@ if __name__ == "__main__":
     if options.Train:
         vis_update_params['test_mode_on'] = False
         sumoBinary = checkBinary('sumo')
-
+    else:
+        print("Initizlizing Test mood as default")
+        vis_update_params['test_mode_on'] = True
+        sumoBinary = checkBinary('sumo-gui')
 
     ## ----- ##
     Proudhon = env(sumoBinary=sumoBinary)  # env.__init__ and template loading
