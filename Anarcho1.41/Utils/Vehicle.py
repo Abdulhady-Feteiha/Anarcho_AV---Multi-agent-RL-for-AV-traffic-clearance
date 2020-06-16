@@ -1,10 +1,12 @@
 import traci
-from Config import SimTime
+from Config import *
+from RL.ControlAlgo import ControlAlgo
+
 
 
 class Vehicle:
 
-    def __init__(self, ID):
+    def __init__(self, ID, vehicle_params, control_algorithm_name="SUMO_KRAUSS"):
         self.ID = ID
         self.base_route = 1  # Index of base route
         self.length_of_base_route = 100  # Length of base route
@@ -15,6 +17,21 @@ class Vehicle:
         self.max_decel = None
 
         self.previous_speed = None
+
+        self.vehicle_params = vehicle_params
+        self.vehicle_params['ID'] = self.ID
+
+
+        self.control_algorithm_name = control_algorithm_name
+        self.control_algorithm = ControlAlgo(vehicle_params=self.vehicle_params, name=control_algorithm_name
+                                             , algo_params=q_learning_params, load_q_table=load_q_table,
+                                             test_mode_on=vis_update_params['test_mode_on'])
+
+        self.RL_COLOR = (0,0,255)   # BLUE
+        self.DEFAULT_COLOR = (255,255,255)  # WHITE
+        self.EMER_COLOR = (255, 0, 0) # RED
+
+
 
     def initialize(self):
         """"
@@ -35,6 +52,13 @@ class Vehicle:
         self.max_speed = traci.vehicle.getMaxSpeed(self.ID)
         self.max_accel = traci.vehicle.getAccel(self.ID)
         self.max_decel = traci.vehicle.getDecel(self.ID)
+
+        if self.control_algorithm_name  == "SUMO_KRAUSS" and self.type != "Emergency": self.set_color(self.DEFAULT_COLOR)
+        elif self.control_algorithm_name  == "SUMO_KRAUSS" and self.type == "Emergency": self.set_color(self.EMER_COLOR)
+        elif self.control_algorithm_name == "Q_LEARNING_SINGLE_AGENT": self.set_color(self.RL_COLOR)
+        else: raise ValueError(f"Unknown control_algorithm_name={self.control_algorithm_name} requested from Vehicle with ID: {self.ID}")
+
+
 
     def getSpd(self): #ROS
         '''
@@ -129,6 +153,17 @@ class Vehicle:
         # minimum velocity: 0.0 -> Handled by Code, not SUMO. Sumo ignores command if velocity is negative.
         # maximum velocity: self.max_speed -> Handled by SUMO, so code here is redundant.
 
+    def set_color(self, color_tuple):
+        """
+
+        :param color_tuple: color in the format (R,G,B). EG: (255,255,255): White.
+        More: http://sumo.sourceforge.net/userdoc/TraCI/Change_Vehicle_State.html
+        :return:
+        """
+
+        traci.vehicle.setColor(self.ID, color_tuple)
+
+
     def __eq__(self, other):
         """
         :param other: other vehicle to compare with
@@ -137,5 +172,5 @@ class Vehicle:
         return self.ID == other.ID
 
     def __str__(self):
-        return f"VehicleObjectWithID={self.ID}"
+        return f"VehicleObject(ID={self.ID}, Control={self.control_algorithm_name})"
 

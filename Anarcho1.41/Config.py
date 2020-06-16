@@ -24,14 +24,14 @@ VARIABLES_FOLDER = os.path.join(BASE_PATH, r"Saved Variables")
 # Simulation Variables:
 track_len = 500
 SimTime = 1000.0  # Maximum number of time steps per episode
-max_num_episodes = 50  # Number of training episodes
+max_num_episodes = 500  # Number of training episodes
 
 # Visual Update Parameters
 vis_update_params = dict()
 vis_update_params['every_n_episodes'] = 1  # Print Episode info every_n_episodes
 vis_update_params['every_n_iters'] = 1  # Print Iteration info every_n_iters inside single episode
 vis_update_params['print_reward_every_episode'] = True
-vis_update_params['test_mode_on'] = False  # If test mode is on, the q_table is loaded and not saved nor updated, gui is on, exploit is used always
+vis_update_params['test_mode_on'] = True  # If test mode is on, the q_table is loaded and not saved nor updated, gui is on, exploit is used always
 
 
 
@@ -63,10 +63,12 @@ enable_checks = False
 #Don't forget to initialize SimTime before importing vehicle
 
 from Utils.Vehicle import Vehicle
-vehicles_list = [Vehicle("LH")]  # NOTE: No error will be produced if some cars are not in this list.
+vehicles_list = []  # NOTE: No error will be produced if some cars are not in this list.
                                  # An error will be produced only when in a not-present ID is requested , Vehicle("RB0"), Vehicle("RB1"), Vehicle("RB2"), Vehicle("RB3")
 vehicles_data = dict()  #dict of of lists. Key: Lane index, value: list of indices for agents in this index
+# TODO: Make vehicles_data local to env
 
 num_lanes = 3
-lanes_busyness = [0.5, 0.5, 0.5]  # corresponding to lanes: [0, 1, 2] -- i.e.: [bottom-most lane, middle lane, top-most lane]
+lanes_busyness = [0.1, 0.1, 0.1]  # corresponding to lanes: [0, 1, 2] -- i.e.: [bottom-most lane, middle lane, top-most lane]
 lanes_busyness_mode = 1  # 0 for placing cars at equal distance, 1 for placing cars every (car_length + minGap + max_speed) with probability = lanes_busyness
+percent_rl = 1.0
