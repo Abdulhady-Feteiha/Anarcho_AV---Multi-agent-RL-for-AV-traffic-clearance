@@ -32,7 +32,7 @@ A parallel effort is exerted to construct a ROS (Robot operating system) model a
 * **Anarcho1.3**: Single RL Agent  + One Ambulance Car 
 * **Anarcho1.4**: Mutiple Agents (RL/Auto) + One Ambulance Car, with control over lane busyness, rl_percentage ..etc. Demonstration only, no learning. 
 * **Anarcho1.41**: Multiple RL Cars, same as 1.4, but should have independent learners. Still not complete.
-* **Anarscho1.5**: Enables running experiments. Introduces the concept of sample(dictionary) and experiment to produce outputs. Still not complete. Cloned from Anarcho1.4.
+* **Anarscho1.5**: Enables running experiments. Introduces the concept of sample(dictionary) and experiment to produce outputs. Still not complete. Cloned from Anarcho1.41.
 
 -------------------------------------------------------------------------- <br>
 ![ZC](ZC.png)
