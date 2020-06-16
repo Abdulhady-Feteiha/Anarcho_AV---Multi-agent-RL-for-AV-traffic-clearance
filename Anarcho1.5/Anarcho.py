@@ -7,7 +7,7 @@ import numpy as np
 from sumolib import checkBinary
 import traci
 from Utils.helpers import *
-from RL.SingleAgent import RLAlgorithm
+
 
 from Checks import *
 from Utils.SimTools import *
@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     episode_num = 0
 
-    Algorithm_for_RL, environment_for_next_episode, episode_reward, episode_reward_list = SimTools.episode(sumoBinary=sumoBinary, Proudhon=Proudhon)
+    environment_for_next_episode, episode_reward, episode_reward_list = SimTools.episode(sumoBinary=sumoBinary, Proudhon=Proudhon)
     # total_reward_per_episode.append(episode_reward)   #RLcomment
     # reward_history_per_episode.append(episode_reward_list) #RLcomment
 
@@ -70,8 +70,8 @@ if __name__ == "__main__":
 
         episode_num += 1
 
-        Algorithm_for_RL, environment_for_next_episode, episode_reward, episode_reward_list = \
-            SimTools.episode(sumoBinary=sumoBinary, RB_RLAlgorithm=Algorithm_for_RL, Proudhon=environment_for_next_episode, episode_num=episode_num)
+        environment_for_next_episode, episode_reward, episode_reward_list = \
+            SimTools.episode(sumoBinary=sumoBinary, Proudhon=environment_for_next_episode, episode_num=episode_num)
         # total_reward_per_episode.append(episode_reward) #RLcomment
         # reward_history_per_episode.append(episode_reward_list)  #RLcomment
 
@@ -85,5 +85,3 @@ if __name__ == "__main__":
         # TODO: https://stackoverflow.com/questions/59166732/how-to-disable-print-loading-configuration-done-in-sumo-traci and stop printing termination step number
         ## -- ##
 
-    # Save Q-table after episodes ended:
-    # Algorithm_for_RL.save_q_table() #RLcomment

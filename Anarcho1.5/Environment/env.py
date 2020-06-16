@@ -5,6 +5,8 @@ import traci
 import warnings; do_warn = False
 import copy
 import jinja2
+from Utils.Vehicle import Vehicle
+from Utils.helpers import getters
 
 
 
@@ -14,7 +16,7 @@ class env():
     def __init__(self, sumoBinary, name="MultiAgent1.0",  ambulance_goal_distance=500, rel_amb_y_min = -41, rel_amb_y_max = 16):
 
 
-        self.name = name
+        self.name = name    # NOT USED EXCEPT FOR DISPLAY PURPOSES
         self.amb_goal_dist = ambulance_goal_distance
         self.reward = 0.0
         self.emer_start_lane = None
@@ -61,20 +63,40 @@ class env():
         traci.start([sumoBinary, "-c", Sumocfg_DIR,
                      "--tripinfo-output", "tripinfo.xml", "--seed", str(Sumo_random_seed)])  # SUMO starts
 
-        vehicles_list = [Vehicle("LH")]  # NOTE: No error will be produced if some cars are not in this list.
-        # An error will be produced only when in a not-present ID is requested , Vehicle("RB0"), Vehicle("RB1"), Vehicle("RB2"), Vehicle("RB3")
+        self.vehicle_params = dict()
+        self.vehicle_params['Actions'] = self.Actions
+        self.vehicle_params['action_to_string_dict'] = self.action_to_string_dict
+        self.vehicle_params['rel_amb_y_min'] = self.rel_amb_y_min
+        self.vehicle_params['rel_amb_y_max'] = self.rel_amb_y_max
+
+        self.vehicles_list = [Vehicle("LH", vehicle_params=self.vehicle_params,
+                            control_algorithm_name="SUMO_KRAUSS")]  # NOTE: No error will be produced if some cars are not in this list.
+        # An error will be produced only when in a not-present ID is requested
 
         # Create the real global vehicles list (temporary/fake: initialized one in Config.py with ambulance only):
+
+        agent_list_index = 0
+
         for lane, num_cars in vehicles_data.items():
             for agent_index in range(num_cars):
-                vehicles_list.append(
-                    Vehicle(env.create_vehicle_id(lane, agent_index))
-                )
+                # set control_type according to chosen percentage:
+                if random.uniform(0, 1) < percent_rl: # Then, choose RL ALgorithm
+                    control_type = "Q_LEARNING_SINGLE_AGENT" # possible values: ["Q_LEARNING_SINGLE_AGENT", "SUMO_KRAUSS"]
+                else:   # Then, choose the SUMO Algorithm
+                    control_type = "SUMO_KRAUSS"    # possible values: ["Q_LEARNING_SINGLE_AGENT", "SUMO_KRAUSS"]
 
-        for vehc in vehicles_list:  # vehicles initialized
+                # The plus one is because the ambulance always comes first in the vehicles list
+
+                self.vehicles_list.append(
+                    Vehicle(ID=env.create_vehicle_id(lane, agent_index), vehicle_params=self.vehicle_params,
+                            control_algorithm_name=control_type)
+                )
+                agent_list_index += 1
+
+        for vehc in self.vehicles_list:  # vehicles initialized
             vehc.initialize()
 
-        self.list_of_vehicles = copy.copy(vehicles_list)  # Note: to copy the list, keeping reference to the original vehicles (as opposed to deepcopy, which would copy vehicles)
+        self.list_of_vehicles = copy.copy(self.vehicles_list)  # Note: to copy the list, keeping reference to the original vehicles (as opposed to deepcopy, which would copy vehicles)
         self.recount_vehicles()
 
     @staticmethod
@@ -249,10 +271,6 @@ class env():
         # self.Actions = self.Actions
         # self.action_to_string_dict = self.action_to_string_dict
 
-        # Calculation for optimal time is kept in case the track_len is changed between episodes
-        self.optimal_time = int(np.round(
-            track_len / self.emer.max_speed))  # Optimal Number of time steps: number of time steps taken by ambulance at maximum speed
-        self.max_steps = 20 * self.optimal_time
 
         # ---------------------------------------------------------------------------- #
         # 2 :        R A N D O M L Y      I N I T I A L I Z E       X M L s
@@ -268,24 +286,41 @@ class env():
 
         # Create the real global vehicles list (temporary/fake: initialized one in Config.py with ambulance only):
 
-        vehicles_list = [Vehicle("LH")]  # NOTE: No error will be produced if some cars are not in this list.
-        # An error will be produced only when in a not-present ID is requested , Vehicle("RB0"), Vehicle("RB1"), Vehicle("RB2"), Vehicle("RB3")
+        self.vehicles_list = [Vehicle("LH", vehicle_params=self.vehicle_params,
+                                 control_algorithm_name="SUMO_KRAUSS")]  # NOTE: No error will be produced if some cars are not in this list.
+        # An error will be produced only when in a not-present ID is requested
 
+        # Create the real global vehicles list (temporary/fake: initialized one in Config.py with ambulance only):
+
+        agent_list_index = 0
 
         for lane, num_cars in vehicles_data.items():
             for agent_index in range(num_cars):
-                vehicles_list.append(
-                    Vehicle(env.create_vehicle_id(lane, agent_index))
-                )
+                # set control_type according to chosen percentage:
+                if random.uniform(0, 1) < percent_rl:  # Then, choose RL ALgorithm
+                    control_type = "Q_LEARNING_SINGLE_AGENT"  # possible values: ["Q_LEARNING_SINGLE_AGENT", "SUMO_KRAUSS"]
+                else:  # Then, choose the SUMO Algorithm
+                    control_type = "SUMO_KRAUSS"  # possible values: ["Q_LEARNING_SINGLE_AGENT", "SUMO_KRAUSS"]
 
-        for vehc in vehicles_list:  # vehicles initialized
+                # The plus one is because the ambulance always comes first in the vehicles list
+
+                self.vehicles_list.append(
+                    Vehicle(ID=env.create_vehicle_id(lane, agent_index), vehicle_params=self.vehicle_params,
+                            control_algorithm_name=control_type)
+                )
+                agent_list_index += 1
+
+        for vehc in self.vehicles_list:  # vehicles initialized
             vehc.initialize()
 
         self.list_of_vehicles = copy.copy(
-            vehicles_list)  # Note: to copy the list, keeping reference to the original vehicles (as opposed to deepcopy, which would copy vehicles)
+            self.vehicles_list)  # Note: to copy the list, keeping reference to the original vehicles (as opposed to deepcopy, which would copy vehicles)
         self.recount_vehicles()
 
-
+        # Calculation for optimal time is kept in case the track_len is changed between episodes
+        self.optimal_time = int(np.round(
+            track_len / self.emer.max_speed))  # Optimal Number of time steps: number of time steps taken by ambulance at maximum speed
+        self.max_steps = 20 * self.optimal_time
 
 
     def get_emer_start_lane(self):  # Called at beginning of episode only
@@ -298,27 +333,27 @@ class env():
         :param list_of_vehicles: list of objects of the type Vehicle, of which one ONLY is ambulance.
         :return: None. But assigns values below :
             :observed_state: [ [agent_vel , agent_lane , amb_vel , amb_lane , rel_amb_y] .. for vehicle in vehicles ]
-            :hidden_state:   [ agent_abs_y ... for vehicle in vehicles , amb_abs_y] ---> note the amb_abs_y at the end
+            :hidden_state:   [amb_abs_y, agent_abs_y ... for vehicle in vehicles] ---> note the amb_abs_y at the end
             :full_state:     [ observed_state, hidden_state ]
         '''
+
+        # TODO: Replace getters with an internal function
+        getters(self.list_of_vehicles)   # Get all measurements per vehicle
 
         count_emergency_vehicles = 0  # Must be 1 only !
         count_ego_vehicles = 0  # Currently 1 only
         observed_state = [[] for i in
-                          range(len(self.list_of_vehicles) - 1)]  # Currently contains data for one ego vehicle only.
+                          range(len(self.list_of_vehicles) - 1)]  # Contains data all ego vehicles (only, no emergency vehicle, hence the minus 1).
         # Shall contain all vehicles' data in the future
         # minus 1 since one vehicle is an emergency vehicle
         hidden_state = [0.0 for i in
-                        range(len(self.list_of_vehicles))]  # Entry for each vehicle (review :hidden_state: up)
-        # TODO: Remove the below loop according to RB_comment. Do this in version 1.4 to avoid putting effort into it now
-        #  since it is not a fault
+                        range(len(self.list_of_vehicles))]  # Entry for each vehicle (incuding emergency vehicle) (review :hidden_state: up)
+
         '''
-        RB_ comment:
-        repeated assignment, why don't use count_emergency_vehicles, count_ego_vehicles
-        already existing in self?
+        Need to recount every update (some cars might have left)
         '''
 
-        for vhcl in self.list_of_vehicles:
+        for vehicle_index, vhcl in enumerate(self.list_of_vehicles):
 
             if (vhcl.type == "Emergency"): #Assumese that the ambulance is the first vehicle in the list of vehicles
                 # ------------------------ checks - start -----------------------#
@@ -331,6 +366,8 @@ class env():
                 amb_vel = vhcl.spd
                 amb_lane = vhcl.lane
                 amb_abs_y = vhcl.lane_pose
+                hidden_state[-1] = amb_abs_y  # Test: hopefully vehicle_index here = 0?
+
 
             elif (vhcl.type == "Ego"):
                 agent_vel = vhcl.spd
@@ -340,9 +377,12 @@ class env():
                 rel_amb_y = amb_abs_y - agent_abs_y  # can be negative and that's ok. Will handle that during indexing.
                 # Assumes that the ambulance is the first vehicle in the list of vehicles
 
-                observed_state[count_ego_vehicles] = [agent_vel, agent_lane, amb_vel, amb_lane, rel_amb_y]
-                hidden_state[count_ego_vehicles] = agent_abs_y
+                observed_state[vehicle_index-1] = [agent_vel, agent_lane, amb_vel, amb_lane, rel_amb_y]   # Test: is vehicle_index-1 < 0 ? Should start at 0
+                hidden_state[vehicle_index-1] = agent_abs_y   # Test: is vehicle_index < 0 ?
                 count_ego_vehicles += 1
+                # update the vehicle index used to access the vehicle in the observed state and hidden state lists
+                # for observed state: it will be this index
+                # for hidden state: it will be this index
 
             else:
                 raise ValueError(
@@ -350,16 +390,23 @@ class env():
                     f'\n Please only choose one of those in your route XML file or edit the observe function inside env class to'
                     f'accommodate your new vehicle type.')
 
-        hidden_state[-1] = amb_abs_y
 
         self.hidden_state = hidden_state
         self.observed_state = observed_state
-        self.full_state = [observed_state, hidden_state]
+        self.full_state = [[observed_state[i-1], hidden_state[i-1]]
+                           for i, vhcl in enumerate(self.list_of_vehicles) if vhcl.type != "Emergency"]
+        # observed_state[i] is a list  # hidden_state[i] is a number  # each element in a full state is a list
 
-    def are_we_done(self, full_state, step_number):
+    def are_we_done(self, step_number):
+        """
+        IMPORTANT NOTE: THIS FUNCTION UPDATES  self.list_of_vehicles -- #TODO: PUSH THAT TO ANOTHER FUNCTION. Probably recount_vehicles?
+        :param step_number:
+        :return:
+        """
         #full_state: currently not used since we have the ambulance object.
 
-        amb_abs_y = self.full_state[-1][-1] #Please refer to shape of full_state list in env.measure_full_state()
+        # Assumes hidden_state[-1] has the ambulance data
+        amb_abs_y = self.hidden_state[-1] #Please refer to shape of full_state list in env.measure_full_state()
 
 
         #1: steps == max_steps-1
@@ -371,14 +418,15 @@ class env():
             return 2 #GOAL IS NOW 500-10-1 = 489 cells ahead. To avoid ambulance car eacaping
 
         elements_to_remove = []
-        for agent_index in range( self.count_ego_vehicles ):
-            agent_abs_y = self.full_state[-1][agent_index] # #Please refer to shape of full_state list in env.measure_full_state
-                                                            # hidden_state shape: [ agent_abs_y ... for vehicle in vehicles , amb_abs_y]
-            if (agent_abs_y > self.amb_goal_dist - self.emer.max_speed - 1):
-                # Delete element (so that it won't be referred to, again) and just continue
-                # print(f'Removing {self.list_of_vehicles[agent_index+1].ID} ...')    # Why plus one (as opposed to just agent_index)?:: because ambulance is vehicles_list[0]
-                elements_to_remove.append(self.list_of_vehicles[agent_index+1])
-                # return 3
+        for agent_index, agent in enumerate(self.list_of_vehicles):
+            if agent.type != "Emergency":   # Emergency vehicle exiting should trigger an episode end not a removal of an agentt
+                agent_abs_y = self.hidden_state[agent_index-1] # #Please refer to shape of full_state list in env.measure_full_state
+                                                                # hidden_state shape: [amb_abs_y, agent_abs_y ...
+                if (agent_abs_y > self.amb_goal_dist - self.emer.max_speed - 1):
+                    # Delete element (so that it won't be referred to, again) and just continue
+                    # print(f'Removing {self.list_of_vehicles[agent_index+1].ID} ...')    # Why plus one (as opposed to just agent_index)?:: because ambulance is vehicles_list[0]
+                    elements_to_remove.append(self.list_of_vehicles[agent_index])
+                    # return 3
 
         if len(elements_to_remove) > 0:
             for agent in elements_to_remove:
@@ -395,6 +443,7 @@ class env():
     def recount_vehicles(self):
         self.count_emergency_vehicles = 0
         self.count_ego_vehicles = 0
+        self.agents = []
 
         for vhcl in self.list_of_vehicles:  # Count vehicles according to vehicle type
 
@@ -434,7 +483,34 @@ class env():
         :param vehID: string, ID of the vehicle to get the Vehicle object for
         :return: Vehicle, object that has the ID equal to vehID
         '''
-        for vhc in self.list_of_vehicles:
+        for vhc in self.vehicles_list:
+            # Why use the global vehicles_list? : because (hear this):
+            '''
+            Note:
+            vehicles_list: list of all vehicles in an episode. Gets updated each episode with a totally different list of vehicles. It is also a global variable,
+            currently, despite not being used outside env.py
+            self.list_of_vehicles: at the beggining of each episode, it's a copy of vehicles_list. However, after each step, it gets updated by removing the 
+            vehicles that reached the goal. 
+            ----------------------
+            ----------------------
+            Reason:
+            Some times, in env.get_follow_speed_by_id, SUMO returns a vehicle ID, however, when we want to retrieve it
+            from self.list_of_vehicles, it is not there.. this is because the vehicle has just left the simulation (in the last step). 
+            So, SUMO returns its ID as the leading vehicle and hold its data (it stil did not register that it left the simulation)
+            So, when get_vehicle_object_by_id(leading_vehicle_ID) is called, it returns None (because our list is updated --more than that of SUMO--) and knows
+            that the vehicle has left the simulation. So, the easiest not-wrong solution would be to use the vehicles_list. This is because
+            it nevers returns a correct output (as opposed to self.list_of_vehicles, which returns a wrong output in that one case).
+            
+            This output causes an error in env.get_follow_speed_by_id because it calls traci.vehicle.getFollowSpeed using leading_vehicle.spd, when
+            leading_vehicle has been returned by this function as None due to the one-step-ahead it has against SUMO's vehicle-exit detection.
+            
+            The one step ahead is caused by (check are_we_done function): the fact that, to check if a vehicle has exited the simulation, we check for it reaching
+            the end- ambulance_max_speed, not the end. Why not correct that?.. you may ask.. I tell you: Because if we did, we risk the agent leaving the 
+            simulation without us detecting it did. After all, how would you know that this specific agent left the simulation, after it does leave the simulation?
+            I can see a work-around where, after each iteration, I check for the ID's of all vehicles anc compare them to last step's vehicle ID's. But this seems
+            more straightforward to me, now. If you think otherwise, please change it, and set the vehicles_list in the line above to self.list_of_vehicles
+             
+            '''
             if vhc.ID == vehID :
                 return vhc
         return None  # If vehID does not belong to any vehicle, None value is returned
@@ -560,4 +636,4 @@ class env():
 
     def __str__(self):  #:return: environment string representation
         return str(
-            {"name": self.name, "reward": self.reward, "Vehicles": [vhc.ID for vhc in self.list_of_vehicles], "full_state": self.full_state})
+            {"name": self.name, "numVehicles": len(self.list_of_vehicles)})
