@@ -71,4 +71,4 @@ vehicles_data = dict()  #dict of of lists. Key: Lane index, value: list of indic
 num_lanes = 3
 lanes_busyness = [0.1, 0.1, 0.1]  # corresponding to lanes: [0, 1, 2] -- i.e.: [bottom-most lane, middle lane, top-most lane]
 lanes_busyness_mode = 1  # 0 for placing cars at equal distance, 1 for placing cars every (car_length + minGap + max_speed) with probability = lanes_busyness
-percent_rl = 1.0
+percent_rl = 0.5
