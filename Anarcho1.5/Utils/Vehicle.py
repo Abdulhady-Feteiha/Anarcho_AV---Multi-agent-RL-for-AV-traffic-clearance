@@ -41,9 +41,9 @@ class Vehicle:
         and traci.start() -- i.e. once every environment restart/reset.
         """
         self.type = traci.vehicle.getTypeID(self.ID)
-        if(self.type=="Emergency"):
-            pass
-        else:
+        if(self.type=="Emergency" and self.vehicle_params['change_lane_if_amb']):
+            pass    # keep changing lane to speed up
+        else:  # i.e. does not change lane even if type=="Emergency" to speed up, because 'change_lane_if_amb' is False
             traci.vehicle.setLaneChangeMode(self.ID, 512)  # was 512, should it be 256? # Do we, sometimes, request a change, and it ignores it?
         '''To disable all autonomous changing but still handle safety checks in the simulation,
         either one of the modes 256 (collision avoidance) or 512 (collision avoidance and safety-gap enforcement) may be used.

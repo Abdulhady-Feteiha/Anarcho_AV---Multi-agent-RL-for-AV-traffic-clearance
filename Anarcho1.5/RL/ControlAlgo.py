@@ -255,5 +255,5 @@ class ControlAlgo():
             np.save(variables_folder_path + '/Q_TABLE.npy', self.q_table)
 
     def load_q_table(self, variables_folder_path=VARIABLES_FOLDER):
-        print(f"Loaded Q_TABLE from {variables_folder_path + '/Q_TABLE.npy'}")
+        #debug#print(f"Loaded Q_TABLE from {variables_folder_path + '/Q_TABLE.npy'}")
         return np.load(variables_folder_path + '/Q_TABLE.npy')

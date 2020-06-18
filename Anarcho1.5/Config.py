@@ -19,6 +19,7 @@ TEMPLATES_PATH = os.path.join(BASE_PATH, r"Templates")
 NET_FILE_PATH = os.path.join(BASE_PATH, r"Sumo_files\Anarcho1.4.net.xml")
 ROUTE_FILE_PATH = os.path.join(BASE_PATH, r"Sumo_files\Anarcho1.4.rou.xml")
 VARIABLES_FOLDER = os.path.join(BASE_PATH, r"Saved Variables")
+EXPERIMENT_RESULTS_FOLDER = os.path.join(BASE_PATH, r"ExpResults")
 
 
 # Simulation Variables:
@@ -29,7 +30,7 @@ max_num_episodes = 500  # Number of training episodes
 # Visual Update Parameters
 vis_update_params = dict()
 vis_update_params['every_n_episodes'] = 1  # Print Episode info every_n_episodes
-vis_update_params['every_n_iters'] = 1  # Print Iteration info every_n_iters inside single episode
+vis_update_params['every_n_iters'] = 1000  # Print Iteration info every_n_iters inside single episode
 vis_update_params['print_reward_every_episode'] = True
 vis_update_params['test_mode_on'] = True  # If test mode is on, the q_table is loaded and not saved nor updated, gui is on, exploit is used always
 
@@ -68,7 +69,8 @@ vehicles_list = []  # NOTE: No error will be produced if some cars are not in th
 vehicles_data = dict()  #dict of of lists. Key: Lane index, value: list of indices for agents in this index
 # TODO: Make vehicles_data local to env
 
+ambulance_changes_lane = True
 num_lanes = 3
-lanes_busyness = [0.1, 0.1, 0.1]  # corresponding to lanes: [0, 1, 2] -- i.e.: [bottom-most lane, middle lane, top-most lane]
+lanes_busyness = [0.5, 0.5, 0.5]  # corresponding to lanes: [0, 1, 2] -- i.e.: [bottom-most lane, middle lane, top-most lane]
 lanes_busyness_mode = 1  # 0 for placing cars at equal distance, 1 for placing cars every (car_length + minGap + max_speed) with probability = lanes_busyness
 percent_rl = 0.5
