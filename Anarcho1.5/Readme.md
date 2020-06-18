@@ -11,7 +11,7 @@ This version (1.5) was copied from version (1.41). Design goal was to facilitate
 
 # How this works?
 * 1- An experiment sweeps over one variable, measuring another variable (one on the x, another on the y). Runs an episode with
-    each x  value pair (x); N times, preparing for later averaging over the result over the N runs/episodes.
+    each x  value (x); N times, preparing for later averaging over the result over the N runs/episodes.
 * 2- An experiment consists of samples, a sample consists of an episode run for the specific (x) value. I.e. the
     result of the observation for an (x) value is calculated by averaging the results for the same (x) value over N samples
     (i.e. samples = runs = group of episodes till termination)
