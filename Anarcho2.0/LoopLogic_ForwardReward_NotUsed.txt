@@ -1,0 +1,25 @@
+#RUN:
+
+#1 inits
+ -- step, episode, done, q_learning_params, vehicles_list, Proudhon (env), RB_RLAlgorithm (RLAlgorithm)
+
+#2 init measurements
+ -- after stepping: getters, full_state
+
+#3 Loop:
+	#3.1: Store last states --last_observed_state, amb_last_velocity
+		------------------------------------------------------------------
+
+	#3.2:       M O V E      O N E      S I M U L A T I O N       S T E P --using last chosen action
+									      -- no chosen action in first step, just move simulation
+		------------------------------------------------------------------
+	#3.3: measurements and if we are done check-- getters, full_state, are_we_done !!!!!!!!! FOR THIS REASON: PAST REWARD LOGIC IS CHOSE !!!
+										-- MUST KNOW IF I AM DONE IN THIS STEP TO DECIDE ON FINAL REWARD OR NOT
+	#3.4: Feasibility check for current_state --get_feasible_actions for agent
+	#3.5: Actually Choose Action from feasible ones --pickAction
+#CHANGE##3.6: reward chosen action --future reward logic 
+#CHANGE##3.7: update q table using future reward logic 
+#CHANGE##3.8: Request environment to apply new action --applyAction (still not PHYSICALLY applied here but in #3.2) --order
+
+#CHANGE#
+#4 Update Epsilon after episode is done

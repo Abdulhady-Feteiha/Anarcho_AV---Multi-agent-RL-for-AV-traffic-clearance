@@ -1,0 +1,39 @@
+#episode:
+
+feasible_actions_for_chosen_actionfeasible_actions_for_chosen_actionfeasible_actions_for_chosen_action
+----------->> feasible_actions_for_new_observed_statefeasible_actions_for_new_observed_statefeasible_actions_for_new_observed_state
+
+#1 inits
+ -- step, done, q_learning_params, vehicles_list, Proudhon (env), RB_RLAlgorithm (RLAlgorithm)
+
+#2 init measurements
+#CHANGE#-- after stepping: Proudhon.emer_start_lane, getters, measure_full_state, #CHANGE_DONE# feasible_actions, chosen action, apply action (request), episode_reward, episode_reward_list
+
+#3 MAIN LOOP:
+	#3.1: Store last states -- amb_last_velocity, last_observed_state, last_observed_state_for_this_agent
+		------------------------------------------------------------------
+
+	#3.2:       M O V E      O N E      S I M U L A T I O N       S T E P --using last chosen action (not input, but requested previously)
+			traic.simulationStep() and step+=1		      -- no chosen action in first step, just move simulation
+		#3.2.1: are_we_ok ? :: was chosen_action applied ? is any state not as you would expect ?
+		------------------------------------------------------------------
+	#3.3: measurements and if we are done check-- getters, full_state, are_we_done !!!!!!!!! FOR THIS REASON: PAST REWARD LOGIC IS CHOSEN !!!
+										-- MUST KNOW IF I AM DONE IN THIS STEP TO DECIDE ON FINAL REWARD OR NOT
+#CHANGE##3.4: reward last step's chosen action --backward reward logic #CHANGE_DONE order !!FOR THIS, WE NEED TO HAVE CHOSEN ACTION INITIALIZED AND APPLIED(=requested on agent)!!
+#CHANGE##3.5: update q table using backward reward logic #CHANGE_DONE order  #REVIEW: input feasible actions for next NEW state
+			#------------ BREAK HERE if WE ARE DONE ------------#
+	#3.6: Feasibility check for current_state --get_feasible_actions for agent (for next step)
+	#3.7: Actually Choose Action from feasible ones --pickAction (for next step)
+#CHANGE##3.8: Request environment to apply new action --applyAction (still not PHYSICALLY applied here but in #3.2) --order
+
+#CHANGE#
+#4 Update Epsilon after episode is done #CHANGE-- outside the loop
+
+#CHANGE #ADD
+#5 env.reset() #REMEMBER: KEEP UPDATED EPSILON
+
+
+
+
+
+

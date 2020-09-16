@@ -1,0 +1,12 @@
+rl_p,lane_busyness,does_amb_change,start_pos,amb_travel_time
+0.0,0.1,False,middle,60.96
+0.1,0.1,False,middle,60.71
+0.2,0.1,False,middle,58.16
+0.30000000000000004,0.1,False,middle,58.18
+0.4,0.1,False,middle,58.01
+0.5,0.1,False,middle,57.05
+0.6000000000000001,0.1,False,middle,56.22
+0.7000000000000001,0.1,False,middle,54.89
+0.8,0.1,False,middle,52.67
+0.9,0.1,False,middle,50.95
+1.0,0.1,False,middle,50.66
