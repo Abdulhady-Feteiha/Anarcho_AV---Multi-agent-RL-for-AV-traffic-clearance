@@ -41,76 +41,81 @@ class RLAlgorithm():
             self.min_epsilon = algo_params['min_epsilon']
             self.decay_rate = algo_params['decay_rate']
 
-    def pickAction(self, feasible_actions_for_chosen_action, new_observed_state_for_this_agent):
+    def pickAction(self, feasible_actions_for_chosen_action, current_state):
         '''
         :param feasible_actions_for_chosen_action: feasible actions for new_observed_state_for_this_agent to choose from
         :param new_observed_state_for_this_agent: current state to choose action for
         :return:
         '''
         #TODO: feasible_actions_for_chosen_action -->>> var_name_change ACTUALLY: feasible_actions_for_current_state
-        feasible_action_indices = []
-        for act in feasible_actions_for_chosen_action:
-            feasible_action_indices.append(self.action_to_string_dict[act])
-
-        rel_amb_y_min = self.environment.rel_amb_y_min  # -41
-        rel_amb_y_max = self.environment.rel_amb_y_max  # +16 #TODO: Does it have a meaning ?
-
-        new_agent_vel = new_observed_state_for_this_agent[0]
-        new_agent_vel_index = int(np.round(new_agent_vel))  # [0,1,2,3,4,5]
-
-        new_agent_lane_index = new_observed_state_for_this_agent[1]
-
-        new_amb_vel = new_observed_state_for_this_agent[2]
-        new_amb_vel_index = int(np.round(new_amb_vel))  # [0,1,2,3,4,5,6,7,8,9,10]
-
-        new_amb_lane_index = new_observed_state_for_this_agent[3]
-
-        new_rel_amb_y = np.clip(new_observed_state_for_this_agent[4], rel_amb_y_min,
-                            rel_amb_y_max)  # rel_amb_y  (16+1+41 = 58): [-41,-40,-39,.....,0,...13,14,15,16]
-        new_rel_amb_y_index = int(np.round(new_rel_amb_y) + abs(rel_amb_y_min))
-
-        '''
-        Previous comment by Waleed:
-        ## First we randomize a number
-        exp_exp_tradeoff = random.uniform(0,1)
-
-        ## If this number > greater than epsilon --> exploitation (taking the biggest Q value for this state)
-        if exp_exp_tradeoff > epsilon:
-            action = np.argmax(qtable[state,:])
-
-        # Else doing a random choice --> exploration
+        rel_distance = current_state[4]
+        if (enable_rl_dis_engagement & (~ ((rel_distance < self.environment.rel_amb_y_max) & (rel_distance > self.environment.rel_amb_y_min)))):
+             self.action_chosing_method = "SUMO"
+             self.Action = None
         else:
-            action = env.action_space.sample()
+            feasible_action_indices = []
+            for act in feasible_actions_for_chosen_action:
+                feasible_action_indices.append(self.action_to_string_dict[act])
 
-        link: https://github.com/simoninithomas/Deep_reinforcement_learning_Course/blob/master/Q%20learning/Taxi-v2/Q%20Learning%20with%20OpenAI%20Taxi-v2%20video%20version.ipynb
-        '''
+            rel_amb_y_min = self.environment.rel_amb_y_min  # -41
+            rel_amb_y_max = self.environment.rel_amb_y_max  # +16 #TODO: Does it have a meaning ?
+
+            new_agent_vel = current_state[0]
+            new_agent_vel_index = int(np.round(new_agent_vel))  # [0,1,2,3,4,5]
+
+            new_agent_lane_index = current_state[1]
+
+            new_amb_vel = current_state[2]
+            new_amb_vel_index = int(np.round(new_amb_vel))  # [0,1,2,3,4,5,6,7,8,9,10]
+
+            new_amb_lane_index = current_state[3]
+
+            new_rel_amb_y = np.clip(current_state[4], rel_amb_y_min,
+                                rel_amb_y_max)  # rel_amb_y  (16+1+41 = 58): [-41,-40,-39,.....,0,...13,14,15,16]
+            new_rel_amb_y_index = int(np.round(new_rel_amb_y) + abs(rel_amb_y_min))
+
+            '''
+            Previous comment by Waleed:
+            ## First we randomize a number
+            exp_exp_tradeoff = random.uniform(0,1)
+    
+            ## If this number > greater than epsilon --> exploitation (taking the biggest Q value for this state)
+            if exp_exp_tradeoff > epsilon:
+                action = np.argmax(qtable[state,:])
+    
+            # Else doing a random choice --> exploration
+            else:
+                action = env.action_space.sample()
+    
+            link: https://github.com/simoninithomas/Deep_reinforcement_learning_Course/blob/master/Q%20learning/Taxi-v2/Q%20Learning%20with%20OpenAI%20Taxi-v2%20video%20version.ipynb
+            '''
 
 
-        #self.Action = self.QActions[randrange(len(self.QActions))]
-        self.exp_exp_tradeoff = random.uniform(0,1)
+            #self.Action = self.QActions[randrange(len(self.QActions))]
+            self.exp_exp_tradeoff = random.uniform(0,1)
 
-        if (self.exp_exp_tradeoff > self.epsilon or self.test_mode_on):  # tes_mode_on will force the algorithm to choose exploitation.
-            self.action_chosing_method = 'expLOIT'
+            if (self.exp_exp_tradeoff > self.epsilon or self.test_mode_on):  # tes_mode_on will force the algorithm to choose exploitation.
+                self.action_chosing_method = 'expLOIT'
 
-            max_value_index= np.argmax(self.q_table[new_agent_vel_index, new_agent_lane_index, new_amb_vel_index, new_amb_lane_index, new_rel_amb_y_index, feasible_action_indices])
-            action_index =feasible_action_indices [max_value_index]
+                max_value_index= np.argmax(self.q_table[new_agent_vel_index, new_agent_lane_index, new_amb_vel_index, new_amb_lane_index, new_rel_amb_y_index, feasible_action_indices])
+                action_index =feasible_action_indices [max_value_index]
 
-            desired_action_string = self.QActions[action_index]
-            self.Action = desired_action_string
+                desired_action_string = self.QActions[action_index]
+                self.Action = desired_action_string
 
-            # debug#print("For this state, I am the max index : ",max_value_index)
-            #debug# print ("I am the picked action for exploitation ",desired_action_string)
-        else:
-            self.action_chosing_method = 'expLORE'
-            action_index = random.choice(feasible_action_indices)
+                # debug#print("For this state, I am the max index : ",max_value_index)
+                #debug# print ("I am the picked action for exploitation ",desired_action_string)
+            else:
+                self.action_chosing_method = 'expLORE'
+                action_index = random.choice(feasible_action_indices)
 
-            desired_action_string = self.QActions[action_index]
-            #debug# print("I am the picked action for exploration ", desired_action_string)
-            self.Action = desired_action_string
+                desired_action_string = self.QActions[action_index]
+                #debug# print("I am the picked action for exploration ", desired_action_string)
+                self.Action = desired_action_string
 
         return self.Action
 
-    def applyAction(self, action, agent):
+    def applyAction(self, action, agent , current_state):
         '''
         :function: Requests environment to apply an action on given agent
         :param action: string, action chosen by pick Action function
@@ -121,20 +126,29 @@ class RLAlgorithm():
          for acc, dec.
         if it is not the case then :param action will be string with the value of acc and there will be a parasing func to do so
         '''
-        if action == "change_left":
-            agent.chLeft()
-        elif action == "change_right":
-            agent.chRight()
-        elif action == "acc":
-            agent.inst_acc(1)   # hard coded
-            # NOTE: This will ask the agent to seek the maximum safe velocity closest to current_velocity + 1, because SUMO
-            # clips the velocity automatically. Take care during #ROS implementation.
-        elif action == "dec":
-            agent.inst_acc(-1)  # hard coded
-        elif action == "no_acc":
+        rel_distance =current_state[4]
+        if (enable_rl_dis_engagement & ( ~ ((rel_distance < self.environment.rel_amb_y_max) & (rel_distance > self.environment.rel_amb_y_min)))):
+
+            # if  the agent is  outside ambulance window and rl _disenagement is enabled  , disable RL and do not apply any actions let
+            # SUMO car follower model  will apply it for you
             pass
-        else:  # Unrecognized action
-            raise ValueError(f"Unrecgonized action requested from {agent.ID}.applyAction: {action}")
+
+        else:
+
+            if action == "change_left":
+                agent.chLeft()
+            elif action == "change_right":
+                agent.chRight()
+            elif action == "acc":
+                agent.inst_acc(1)   # hard coded
+                # NOTE: This will ask the agent to seek the maximum safe velocity closest to current_velocity + 1, because SUMO
+                # clips the velocity automatically. Take care during #ROS implementation.
+            elif action == "dec":
+                agent.inst_acc(-1)  # hard coded
+            elif action == "no_acc":
+                pass
+            else:  # Unrecognized action
+                raise ValueError(f"Unrecgonized action requested from {agent.ID}.applyAction: {action}")
 
     def update_q_table(self, chosen_action, reward, new_observed_state_for_this_agent,
                        last_observed_state_for_this_agent, feasible_actions_for_new_observed_state):
@@ -151,6 +165,12 @@ class RLAlgorithm():
 
         '''
         if(self.test_mode_on):  # do not update q_table if test_mode is on ! just use it.
+            pass
+
+        elif (enable_rl_dis_engagement & ( ~ ((rel_distance < self.environment.rel_amb_y_max) & (rel_distance > self.environment.rel_amb_y_min)))):
+
+            # if  the agent is  outside ambulance window and rl _disenagement is enabled  , disable RL and do not update q-table
+            # as no learning should occur ...RL is disengaged
             pass
         else:
             rel_amb_y_min = self.environment.rel_amb_y_min
@@ -244,5 +264,5 @@ class RLAlgorithm():
 
 
     def load_q_table(self, variables_folder_path = VARIABLES_FOLDER):
-        print(f"Loaded Q_TABLE from {variables_folder_path + '/Q_TABLE.npy'}")
+        print(f"Loaded Q_TABLE from {variables_folder_path + 'Q_TABLE.npy'}")
         return np.load(variables_folder_path+'/Q_TABLE.npy')
