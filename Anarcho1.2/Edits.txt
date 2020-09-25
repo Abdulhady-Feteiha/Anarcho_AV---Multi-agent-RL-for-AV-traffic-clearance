@@ -8,30 +8,57 @@
 1- exp_exp_tradeoff should not be assigned inside the code of def run, but rather inside the code of: only one line in run and in pickAction
 
 
-
-#TODO:
-
-#IMPORTANT: # Do we, sometimes, request a lane change, and it ignores it due to safety reasons? What is that yellow light ?
-#are_we_ok : made sure ambulance does not change lane, still to make sure: agent follows our commands
-
-# Save and load q-table: does it really work ?..overwrrite, know which q_table it is.
-
 #1 Reproducebility test: Are same actions picked when running twice? (review random seed)
 and SUMO's random seed: https://sumo.dlr.de/docs/Basics/Using_the_Command_Line_Applications.html#random_number_options
 and make sure the Random lane initialization happens at the beginning of the environment initialization to avoid loading lanes from previous loop over episodes (previous run)
 	since the file is save on the hard disk --Done (last part, 1/3) by adding Proudhon.reset to episode() function, if Proudhon is not input
 
+#4 Review: is q-table the same between episodes ? --yes.
+
+
+#TODO:
+
+Alaa:
+((#IMPORTANT: # Do we, sometimes, request a lane change, and it ignores it due to safety reasons? What is that yellow light ?
+#are_we_ok : made sure ambulance does not change lane, still to make sure: agent follows our commands))
+
+
+Abdulhady and Alaa:
 #2 Review Q-learning algorithms is similar to the one on the website.:: update times.. measuring times .. look-ahead: timing right- right action- correct future state?.. feasible future action (not all actions!)?
 
+All:
 #3 Review: Reward for different cases (different lanes, different distances (+/-), different final states: final reward seemed to be faulty earlier)
+#3 Review: update_q_table
 
 
-#4 Review: is q-table the same between episodes ?
+Waleed 
+no_acc
+fix -- check issue
+
+Waleed:
+Thesis:
+- Begin
+
+Alaa: 
+send to Shennawy (Papers for Multiagent, discuss results & guidance in next steps) -- Sunday
+
+Multi-agent Lit-review:
+- Literature Review
 
 
-#TODO: if agent crosses by max_window: then assume car completed all the way as such (running getFollowSpeed several times)
-  -- Our SingleAgentCase of this is to just let the simulation run and apply the final reward if the agent leaves first because the
-	ambulance would be directly behind the agent.
+Next meeting: Monday -- 7:15 PM
+====================================================
+
+
+Current:
+- Fixing Random Behavior
+
+
+Multi-agent:
+- Literature Review
+- Build-on-what-we-have: ||--* Other human cars--||--* Other Single Agents--||
+
+
 
 ================================================================================================================
 

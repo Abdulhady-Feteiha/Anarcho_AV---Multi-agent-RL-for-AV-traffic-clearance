@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<<<<<<< HEAD
 <!-- generated on 04/10/20 15:45:49 by Eclipse SUMO GUI Version v1_5_0+0833-59242a742f
+=======
+<!-- generated on Tue Sep 15 18:39:57 2020 by Eclipse SUMO GUI Version UNKNOWN
+>>>>>>> 0fe0b8e1038beca692c737a33e5cdd2db4b99cd3
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
-        <net-file value="F:\10th%20semester%20isa\1%20GP\training_single_agent\Anarcho_AV&#45;&#45;-Multi-agent-RL-for-AV-traffic-clearance\Anarcho1.3\Sumo_files/Anarcho1.3.net.xml"/>
-        <route-files value="F:\10th%20semester%20isa\1%20GP\training_single_agent\Anarcho_AV&#45;&#45;-Multi-agent-RL-for-AV-traffic-clearance\Anarcho1.3\Sumo_files/Anarcho1.3.rou.xml"/>
+        <net-file value="/Users/Abdulhady/Desktop/GP/Anarcho_AV/Anarcho_AV&#45;&#45;-Multi-agent-RL-for-AV-traffic-clearance/Anarcho1.3/Sumo_files/Anarcho1.3.net.xml"/>
+        <route-files value="/Users/Abdulhady/Desktop/GP/Anarcho_AV/Anarcho_AV&#45;&#45;-Multi-agent-RL-for-AV-traffic-clearance/Anarcho1.3/Sumo_files/Anarcho1.3.rou.xml"/>
     </input>
 
     <output>
@@ -17,16 +21,19 @@
         <end value="10000"/>
     </time>
 
-    <report>
-        <message-log value="&#45;&#45;no-step-log"/>
-    </report>
+    <traci_server>
+        <remote-port value="49956"/>
+    </traci_server>
 
-    <gui_only>
-        <start value="true"/>
-    </gui_only>
+    <random_number>
+        <seed value="5"/>
+    </random_number>
 
 </configuration>
+<<<<<<< HEAD
 -->
 
 <tripinfos xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/tripinfo_file.xsd">
 </tripinfos>
+=======
+>>>>>>> 0fe0b8e1038beca692c737a33e5cdd2db4b99cd3

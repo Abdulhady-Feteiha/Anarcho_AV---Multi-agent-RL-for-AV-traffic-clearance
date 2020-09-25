@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from Config import *  # Make sure this is the first one imported, to have random.seed() used before any actual randomness is assigned
 import os
 import sys
 import optparse
@@ -6,7 +7,6 @@ import numpy as np
 from sumolib import checkBinary
 import traci
 from Utils.measure_max_window import measure
-from Config import *
 from Utils.Vehicle import Vehicle
 from Utils.helpers import *
 from RL.SingleAgent import RLAlgorithm
@@ -26,8 +26,15 @@ else:
 
 def get_options():
     opt_parser = optparse.OptionParser()
+<<<<<<< HEAD
     opt_parser.add_option("--GUI", action="store_true",
                           default=False, help="run the GUI version of sumo")
+=======
+    opt_parser.add_option("--Train", action="store_true",
+                         default=False, help="Train and save a Q table")
+    opt_parser.add_option("--Test", action="store_true",
+                         default=False, help="Test a saved Q table")
+>>>>>>> 0fe0b8e1038beca692c737a33e5cdd2db4b99cd3
     options, args = opt_parser.parse_args()
     return options
 
@@ -43,7 +50,7 @@ def episode(RB_RLAlgorithm=None, Proudhon=None, episode_num=0):
         Proudhon = env(vehicles_list)  # vehicles_list = [LH, RB]
         ## -- ##
         Proudhon.reset()
-        traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml"])
+        traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--seed", str(Sumo_random_seed)])
         for vehc in vehicles_list:
             vehc.initialize()
         ## -- ##
@@ -204,14 +211,29 @@ if __name__ == "__main__":
 
     options = get_options()
 
-    if (options.GUI or vis_update_params['test_mode_on']):
+    if options.Test:
+        vis_update_params['test_mode_on'] = True
         sumoBinary = checkBinary('sumo-gui')
+<<<<<<< HEAD
     else:
         sumoBinary = checkBinary('sumo')
 
     ## ----- ##
     traci.start([sumoBinary, "-c", Sumocfg_DIR,
                  "--tripinfo-output", "tripinfo.xml"])
+=======
+
+    elif options.Train:
+        vis_update_params['test_mode_on'] = False
+        sumoBinary = checkBinary('sumo')
+    else:
+        print("Initizlizing Test mood as default")
+        vis_update_params['test_mode_on'] = True
+        sumoBinary = checkBinary('sumo-gui')
+    ## ----- ##
+    traci.start([sumoBinary, "-c", Sumocfg_DIR,
+                             "--tripinfo-output", "tripinfo.xml", "--seed", str(Sumo_random_seed)])
+>>>>>>> 0fe0b8e1038beca692c737a33e5cdd2db4b99cd3
     for vehc in vehicles_list:
         vehc.initialize()
     ## ----- ##
@@ -224,7 +246,11 @@ if __name__ == "__main__":
 
     ## --- ##
     environment_for_next_episode.reset()
+<<<<<<< HEAD
     traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start"])  # , "--start"
+=======
+    traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start", "--seed", str(Sumo_random_seed)])
+>>>>>>> 0fe0b8e1038beca692c737a33e5cdd2db4b99cd3
     for vehc in vehicles_list:
         vehc.initialize()  # Placed here to set lane change mode ! Important !
     ## --- ##
@@ -247,8 +273,12 @@ if __name__ == "__main__":
         # 5: Reset environment in preparation for next episode
         environment_for_next_episode.reset()
         # Load XMLs:
+<<<<<<< HEAD
         traci.load(
             ["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start", "--message-log", "--no-step-log"])
+=======
+        traci.load(["-c", Sumocfg_DIR, "--tripinfo-output", "tripinfo.xml", "--start", "--seed", str(Sumo_random_seed)])
+>>>>>>> 0fe0b8e1038beca692c737a33e5cdd2db4b99cd3
         # TODO: https://stackoverflow.com/questions/59166732/how-to-disable-print-loading-configuration-done-in-sumo-traci and stop printing termination step number
         for vehc in vehicles_list:
             vehc.initialize()  # Placed here to set lane change mode ! Important !

@@ -7,8 +7,13 @@
       <route id="Ego_route" edges="r2"/>
 
       
+<<<<<<< HEAD
       <vehicle depart="0" id="RB" route="Ego_route" type="Ego" departLane = "0" />
       <vehicle depart="0" departSpeed = "10.0" id="LH" route="Emer_route" type="Emergency" departLane = "2"/>
+=======
+      <vehicle depart="0" id="RB" route="Ego_route" type="Ego" departLane = "1" />
+      <vehicle depart="0" departSpeed = "10.0" id="LH" route="Emer_route" type="Emergency" departLane = "1"/>
+>>>>>>> 0fe0b8e1038beca692c737a33e5cdd2db4b99cd3
 
       <!-- depart: speed of start for the vehicle -->
       <!-- edges: sequence of routes for vehicle-->

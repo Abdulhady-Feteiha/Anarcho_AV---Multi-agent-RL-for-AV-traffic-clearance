@@ -264,5 +264,9 @@ class RLAlgorithm():
 
 
     def load_q_table(self, variables_folder_path = VARIABLES_FOLDER):
+<<<<<<< HEAD:Anarcho1.31/RL/SingleAgent.py
         print(f"Loaded Q_TABLE from {variables_folder_path + 'Q_TABLE.npy'}")
+=======
+        #debug#print(f"Loaded Q_TABLE from {variables_folder_path + '/Q_TABLE.npy'}")
+>>>>>>> 0fe0b8e1038beca692c737a33e5cdd2db4b99cd3:Anarcho1.3/RL/SingleAgent.py
         return np.load(variables_folder_path+'/Q_TABLE.npy')

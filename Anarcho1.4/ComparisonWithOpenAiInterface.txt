@@ -1,0 +1,19 @@
+import gym 			--> import env
+gym.make(env-name) 		--> vehicles_list, env(vehicles_list)
+env.render()			--> --GUI option on Run (every loop vs once)
+env.action_space.n		--> len(env_object.Actions)
+env.observation_space.n		--> // UNKNOWN //
+qtable				--> RLAlgorithm_object.q_table
+all hyperparameters		--> Config.q_learning_params
+
+
+for episode in range(total_episodes) 
+-->
+Anarcho.py:: while(episode_num < max_num_episodes)
+
+Main Loop
+-->
+Anarcho.py:: episode
+
+
+ 
