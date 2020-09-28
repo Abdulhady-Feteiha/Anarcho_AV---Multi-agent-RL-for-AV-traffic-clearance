@@ -1,0 +1,43 @@
+<routes>
+
+      <vType id="Emergency" minGap="2.5" length="2.0" maxSpeed="10.0" sigma="0.0" color='1,0,0' accel = "2.0" decel = "2.0" emergencyDecel="2.0"/>
+      <vType id="Ego" minGap="2.5" length="2.0" maxSpeed="5.0" sigma="0.0" color='0,0,1' accel = "1.0" decel = "1.0"  emergencyDecel="1.0" />
+
+      <route id="Emer_route" edges="r1 r2"/>
+      <route id="Ego_route" edges="r2"/>
+
+      
+      <vehicle depart="0" departSpeed = "10.0" id="LH" route="Emer_route" type="Emergency" departLane = "2"/>
+
+        
+      <vehicle depart="0" id="RB_L0I0" route="Ego_route" type="Ego" departLane = "0" color="1,1,1" departPos="378.5"/>      
+        
+      <vehicle depart="0" id="RB_L0I1" route="Ego_route" type="Ego" departLane = "0" color="1,1,1" departPos="217.0"/>      
+        
+      <vehicle depart="0" id="RB_L0I2" route="Ego_route" type="Ego" departLane = "0" color="1,1,1" departPos="169.5"/>      
+        
+      <vehicle depart="0" id="RB_L1I0" route="Ego_route" type="Ego" departLane = "1" color="1,1,1" departPos="340.5"/>      
+        
+      <vehicle depart="0" id="RB_L1I1" route="Ego_route" type="Ego" departLane = "1" color="1,1,1" departPos="84.0"/>      
+        
+      <vehicle depart="0" id="RB_L2I0" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="226.5"/>      
+        
+      <vehicle depart="0" id="RB_L2I1" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="141.0"/>      
+        
+      <vehicle depart="0" id="RB_L2I2" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="122.0"/>      
+        
+      <vehicle depart="0" id="RB_L2I3" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="93.5"/>      
+        
+      <vehicle depart="0" id="RB_L2I4" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="65.0"/>      
+        
+      <vehicle depart="0" id="RB_L2I5" route="Ego_route" type="Ego" departLane = "2" color="1,1,1" departPos="36.5"/>      
+      
+
+      <!-- depart: Determines the time at which the vehicle enters the network  -->
+      <!-- edges: sequence of routes for vehicle-->
+      <!-- r1L for ego only, -->
+      <!-- more info: https://sumo.dlr.de/docs/Definition_of_Vehicles,_Vehicle_Types,_and_Routes.html#depart -->
+      <!--      <vehicle depart="0" id="RB" route="Ego_route" type="Ego" departLane = "" />
+-->
+
+</routes>

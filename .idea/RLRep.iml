@@ -5,7 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$/Anarcho1.41" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Anarcho1.41/RL" isTestSource="false" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.7 (GetPoints) (2)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.7 (Anarcho1.2.py)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="TestRunnerService">
