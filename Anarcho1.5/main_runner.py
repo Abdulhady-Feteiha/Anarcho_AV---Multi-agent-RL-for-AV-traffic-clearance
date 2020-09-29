@@ -19,29 +19,29 @@ if __name__ == "__main__":
     # TODO: Generate an experiment name from experiment metadata
     N = 100  # Number of sample runs to average over.
 
-    exp1 = {"name": "travel_time_vs_rl_p_amb_changes_0p1_busyness", "xvarname": "rl_p", "minx": 0.0,
-            "maxx": 1.1, "stepx": 0.1, "default_rl_p": 1.0, "does_amb_change": True, "default_busyness": 0.1 }
-    exp2 = {"name": "travel_time_vs_rl_p_amb_changes_0p3_busyness", "xvarname": "rl_p",
-            "minx": 0.0, "maxx": 1.1, "stepx": 0.1, "default_rl_p": 0.0, "does_amb_change": True, "default_busyness": 0.3 }
-    exp3 = {"name": "travel_time_vs_rl_p_amb_changes_0p5_busyness", "xvarname": "rl_p",
-            "minx": 0.0, "maxx": 1.1, "stepx": 0.1, "default_rl_p": 0.0, "does_amb_change": True , "default_busyness": 0.5}
-    exp3 = {"name": "travel_time_vs_rl_p_amb_changes_0p7_busyness", "xvarname": "rl_p",
-            "minx": 0.0, "maxx": 1.1, "stepx": 0.1, "default_rl_p": 0.0, "does_amb_change": True , "default_busyness": 0.7}
+    exp1 = {"name": "new_travel_time_vs_rl_p_amb_changes_0p6_busyness", "xvarname": "rl_p", "minx": 1.0,
+            "maxx": 1.1, "stepx": 0.2, "default_rl_p": 1.0, "does_amb_change": False, "default_busyness": 0.6 }
+    # exp2 = {"name": "travel_time_vs_rl_p_amb_changes_0p3_busyness", "xvarname": "rl_p",
+    #         "minx": 0.0, "maxx": 1.1, "stepx": 0.1, "default_rl_p": 0.0, "does_amb_change": True, "default_busyness": 0.3 }
+    # exp3 = {"name": "travel_time_vs_rl_p_amb_changes_0p5_busyness", "xvarname": "rl_p",
+    #         "minx": 0.0, "maxx": 1.1, "stepx": 0.1, "default_rl_p": 0.0, "does_amb_change": True , "default_busyness": 0.5}
+    # exp3 = {"name": "travel_time_vs_rl_p_amb_changes_0p7_busyness", "xvarname": "rl_p",
+    #         "minx": 0.0, "maxx": 1.1, "stepx": 0.1, "default_rl_p": 0.0, "does_amb_change": True , "default_busyness": 0.7}
+    #
+    # exp4 = {"name": "travel_time_vs_rl_p_amb_does_not_change_0p1_busyness", "xvarname": "rl_p", "minx": 0.0,
+    #         "maxx": 1.1, "stepx": 0.1, "default_rl_p": 1.0, "does_amb_change": False, "default_busyness": 0.1}
+    # exp5 = {"name": "travel_time_vs_rl_p_amb_does_not_change_0p3_busyness", "xvarname": "rl_p",
+    #         "minx": 0.0, "maxx": 1.1, "stepx": 0.1, "default_rl_p": 0.0, "does_amb_change": False,
+    #         "default_busyness": 0.3}
+    # exp6 = {"name": "travel_time_vs_rl_p_amb_does_not_change_0p5_busyness", "xvarname": "rl_p",
+    #         "minx": 0.0, "maxx": 1.1, "stepx": 0.1, "default_rl_p": 0.0, "does_amb_change": False,
+    #         "default_busyness": 0.5}
+    # exp7 = {"name": "travel_time_vs_rl_p_amb_does_not_change_0p7_busyness", "xvarname": "rl_p",
+    #         "minx": 0.0, "maxx": 1.1, "stepx": 0.1, "default_rl_p": 0.0, "does_amb_change": False,
+    #         "default_busyness": 0.7}
 
-    exp4 = {"name": "travel_time_vs_rl_p_amb_does_not_change_0p1_busyness", "xvarname": "rl_p", "minx": 0.0,
-            "maxx": 1.1, "stepx": 0.1, "default_rl_p": 1.0, "does_amb_change": False, "default_busyness": 0.1}
-    exp5 = {"name": "travel_time_vs_rl_p_amb_does_not_change_0p3_busyness", "xvarname": "rl_p",
-            "minx": 0.0, "maxx": 1.1, "stepx": 0.1, "default_rl_p": 0.0, "does_amb_change": False,
-            "default_busyness": 0.3}
-    exp6 = {"name": "travel_time_vs_rl_p_amb_does_not_change_0p5_busyness", "xvarname": "rl_p",
-            "minx": 0.0, "maxx": 1.1, "stepx": 0.1, "default_rl_p": 0.0, "does_amb_change": False,
-            "default_busyness": 0.5}
-    exp7 = {"name": "travel_time_vs_rl_p_amb_does_not_change_0p7_busyness", "xvarname": "rl_p",
-            "minx": 0.0, "maxx": 1.1, "stepx": 0.1, "default_rl_p": 0.0, "does_amb_change": False,
-            "default_busyness": 0.7}
 
-
-    Experiments_list = [exp1, exp2, exp3, exp4, exp5, exp6, exp7]
+    Experiments_list = [exp1] #, exp2, exp3, exp4, exp5, exp6, exp7]
 
 
     for experiment in Experiments_list:

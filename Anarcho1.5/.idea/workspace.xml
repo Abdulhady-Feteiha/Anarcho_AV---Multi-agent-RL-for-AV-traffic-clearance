@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="3f8e97e6-5a92-439b-87b7-0044886837d6" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Anarcho.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Checks.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/ComparisonWithOpenAiInterface.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Config.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Environment/env.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/LoopLogic_ForwardReward_NotUsed.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/LoopLogic_PastReward.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/RL/ControlAlgo.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Readme.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Saved Variables/Q_TABLE.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Saved Variables/Q_TABLE_5000_single_agent.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Saved Variables/Q_TABLE_50k_single_agent.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Saved Variables/Q_TABLE_AVG.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Saved Variables/Q_TABLE_AVG_20K_500_EPSILON_EXPLOIT.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Saved Variables/Q_TABLE_AVG_20K_MINIMAL_EXPLOITATION.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Saved Variables/Q_TABLE_MAX.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Saved Variables/Q_TABLE_Vibrating.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Sumo_files/Anarcho1.4.net.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Sumo_files/Anarcho1.4.rou.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Sumo_files/Anarcho1.4.sumocfg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Templates/net_template.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Templates/route_template.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Utils/SimTools.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Utils/Vehicle.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/Utils/helpers.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Anarcho1.43/tripinfo.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/Anarcho1.5.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExpResults/new_travel_time_vs_rl_p_amb_changes_0p3_busyness.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ExpResults/new_travel_time_vs_rl_p_amb_changes_0p6_busyness.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.idea/RLRep.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/RLRep.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ExpResults/travel_time_vs_rl_p_amb_changes_0p3_busyness.csv" beforeDir="false" afterPath="$PROJECT_DIR$/ExpResults/travel_time_vs_rl_p_amb_changes_0p3_busyness.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Sumo_files/Anarcho1.4.rou.xml" beforeDir="false" afterPath="$PROJECT_DIR$/Sumo_files/Anarcho1.4.rou.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main_runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_runner.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tripinfo.xml" beforeDir="false" afterPath="$PROJECT_DIR$/tripinfo.xml" afterDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectId" id="1iCJUUXDUDCMSnfZ55wGCkqDTpt" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="PropertiesComponent">
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager">
+    <configuration name="main_runner" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Anarcho1.5" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main_runner.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.main_runner" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="3f8e97e6-5a92-439b-87b7-0044886837d6" name="Default Changelist" comment="" />
+      <created>1601405656338</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1601405656338</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
