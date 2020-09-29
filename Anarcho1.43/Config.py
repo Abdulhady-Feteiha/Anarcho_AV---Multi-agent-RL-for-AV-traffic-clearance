@@ -49,7 +49,7 @@ q_learning_params['gamma'] = 0.5  # Discounting rate
 q_learning_params['epsilon'] = 1.0  # Exploration rate
 q_learning_params['max_epsilon'] = 1.0 # Exploration probability at start
 q_learning_params['min_epsilon'] = 0.01  # Minimum exploration probability
-q_learning_params['decay_rate'] = 0.01  # Exponential decay rate for exploration prob
+q_learning_params['decay_rate'] = 0.001  # Exponential decay rate for exploration prob
 load_q_table = False
 
 # Reward Parameters:
@@ -69,8 +69,8 @@ vehicles_data = dict()  #dict of of lists. Key: Lane index, value: list of indic
 # TODO: Make vehicles_data local to env
 
 # ambulance_changes_lane = False
-AGGREGATION_METHOD = "AVG"  # "AVG" or "MAX"
+AGGREGATION_METHOD = "MAX"  # "AVG" or "MAX"
 num_lanes = 3
-lanes_busyness = [0.3, 0.3, 0.3]  # corresponding to lanes: [0, 1, 2] -- i.e.: [bottom-most lane, middle lane, top-most lane]
+lanes_busyness = [0.6, 0.6, 0.6]  # corresponding to lanes: [0, 1, 2] -- i.e.: [bottom-most lane, middle lane, top-most lane]
 lanes_busyness_mode = 1  # 0 for placing cars at equal distance, 1 for placing cars every (car_length + minGap + max_speed) with probability = lanes_busyness
 percent_rl = 1.0
