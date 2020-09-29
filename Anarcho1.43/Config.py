@@ -47,9 +47,9 @@ q_learning_params['learning_rate'] = 0.7  # Learning rate
 q_learning_params['gamma'] = 0.5  # Discounting rate
 # Exploration parameters
 q_learning_params['epsilon'] = 1.0  # Exploration rate
-q_learning_params['max_epsilon'] = 0.02  # Exploration probability at start
+q_learning_params['max_epsilon'] = 1.0 # Exploration probability at start
 q_learning_params['min_epsilon'] = 0.01  # Minimum exploration probability
-q_learning_params['decay_rate'] = 0.0001  # Exponential decay rate for exploration prob
+q_learning_params['decay_rate'] = 0.01  # Exponential decay rate for exploration prob
 load_q_table = False
 
 # Reward Parameters:
