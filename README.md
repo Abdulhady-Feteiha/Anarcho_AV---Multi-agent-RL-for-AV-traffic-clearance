@@ -1,7 +1,7 @@
 # Anarcho_AV---Multi-agent-RL-for-AV-traffic-clearance
 
-This Repo is still under development. Not Ready for use yet.
-Created in partial fullfilment of Graduation Project, Communication and Information Engineering-2020, Zewail City of Science and Technology. <br> <br>
+This repo integrates a DQN with autonomous driving in SUMO environment. The problem is to find a set of actions for all vehicles in the simulation such that the cooperative behaviour of the group results in road evacuation for an emergency vehicle. <br> 
+The work was published in the RTATM2021 conference titled: "Coordinated traffic clearance for emergency vehicles using rein- forcement learning" <br>
 
 Under supervision of **Dr. Mohamed El-Shenawy** <br>
 melshenawy@zewailcity.edu.eg <br> <br>
